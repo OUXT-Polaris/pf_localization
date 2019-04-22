@@ -8,6 +8,8 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   quaternion_operation
   roscpp
+  tf2_ros
+  tf2_geometry_msgs
 )
 
 find_package(Eigen3 REQUIRED)
@@ -25,7 +27,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_library(pf_localization src/pf_localization.cpp src/particle_filter.cpp)
+add_library(pf_localization src/pf_localization.cpp src/particle_filter.cpp src/data_buffer.cpp)
 target_link_libraries(pf_localization ${catkin_LIBRARIES})
 
 add_executable(pf_localization_node src/pf_localization_node.cpp)
