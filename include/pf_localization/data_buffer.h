@@ -20,6 +20,9 @@ public:
     void addData(std::string key,geometry_msgs::PoseStamped pose);
     void addData(std::string key,geometry_msgs::TwistStamped twist);
     void addData(std::string key,geometry_msgs::PointStamped point);
+    bool queryData(ros::Time timestamp, std::string key,geometry_msgs::PoseStamped& pose);
+    bool queryData(ros::Time timestamp, std::string key,geometry_msgs::TwistStamped& twist);
+    bool queryData(ros::Time timestamp, std::string key,geometry_msgs::PointStamped& point);
 private:
     std::map<std::string,std::vector<geometry_msgs::PoseStamped> > pose_buffer_;
     std::map<std::string,std::vector<geometry_msgs::TwistStamped> > twist_buffer_;
