@@ -79,31 +79,14 @@ bool DataBuffer::queryData(ros::Time timestamp, std::string key,geometry_msgs::P
     }
     if(point_buffer_[key].end()->header.stamp > timestamp)
     {
-        point.header.frame_id = point_buffer_[key].end()->header.frame_id;
-        point.point.x = (((point_buffer_[key].end()-1)->point.x)*((point_buffer_[key].end())->header.stamp-timestamp).toSec() + 
-            ((point_buffer_[key].end())->point.x)*(timestamp-(point_buffer_[key].end()-1)->header.stamp).toSec()) 
-            / ((point_buffer_[key].end())->header.stamp - (point_buffer_[key].end()-1)->header.stamp).toSec();
-        point.point.y = (((point_buffer_[key].end()-1)->point.y)*((point_buffer_[key].end())->header.stamp-timestamp).toSec() + 
-            ((point_buffer_[key].end())->point.y)*(timestamp-(point_buffer_[key].end()-1)->header.stamp).toSec()) 
-            / ((point_buffer_[key].end())->header.stamp - (point_buffer_[key].end()-1)->header.stamp).toSec();
-        point.point.z = (((point_buffer_[key].end()-1)->point.z)*((point_buffer_[key].end())->header.stamp-timestamp).toSec() + 
-            ((point_buffer_[key].end())->point.z)*(timestamp-(point_buffer_[key].end()-1)->header.stamp).toSec()) 
-            / ((point_buffer_[key].end())->header.stamp - (point_buffer_[key].end()-1)->header.stamp).toSec();
+        point = interpolate(*(point_buffer_[key].end()-1),*point_buffer_[key].end(),timestamp);
         return true;
     }
     for(auto itr = point_buffer_[key].begin(); itr != (point_buffer_[key].end()-1); itr++)
     {
         if(itr->header.stamp > timestamp && (itr+1)->header.stamp < timestamp)
         {
-            point.header.frame_id = itr->header.frame_id;
-            point.header.stamp = timestamp;
-            ROS_ASSERT(itr->header.frame_id == (itr+1)->header.frame_id);
-            point.point.x = ((itr->point.x)*((itr+1)->header.stamp-timestamp).toSec() + 
-                ((itr+1)->point.x)*(timestamp-itr->header.stamp).toSec()) / ((itr+1)->header.stamp - itr->header.stamp).toSec();
-            point.point.y = ((itr->point.y)*((itr+1)->header.stamp-timestamp).toSec() + 
-                ((itr+1)->point.y)*(timestamp-itr->header.stamp).toSec()) / ((itr+1)->header.stamp - itr->header.stamp).toSec();
-            point.point.z = ((itr->point.z)*((itr+1)->header.stamp-timestamp).toSec() + 
-                ((itr+1)->point.z)*(timestamp-itr->header.stamp).toSec()) / ((itr+1)->header.stamp - itr->header.stamp).toSec();
+            point = interpolate(*itr,*(itr+1),timestamp);
             return true;
         }
     }
@@ -174,4 +157,22 @@ void DataBuffer::removeOldData()
         }
         point_buffer_[key_itr->first] = data;
     }
+}
+
+geometry_msgs::PointStamped DataBuffer::interpolate(geometry_msgs::PointStamped data0,geometry_msgs::PointStamped data1,ros::Time stamp)
+{
+    geometry_msgs::PointStamped ret;
+    ROS_ASSERT(data0.header.frame_id == data1.header.frame_id);
+    ret.header.frame_id = data0.header.frame_id;
+    ret.header.stamp = stamp;
+    ret.point.x = ((data0.point.x*(data1.header.stamp-stamp).toSec()) + 
+        (data1.point.x*(stamp-data0.header.stamp).toSec()))
+        /(data1.header.stamp-data0.header.stamp).toSec();
+    ret.point.y = ((data0.point.y*(data1.header.stamp-stamp).toSec()) + 
+        (data1.point.y*(stamp-data0.header.stamp).toSec()))
+        /(data1.header.stamp-data0.header.stamp).toSec();
+    ret.point.z = ((data0.point.z*(data1.header.stamp-stamp).toSec()) + 
+        (data1.point.z*(stamp-data0.header.stamp).toSec()))
+        /(data1.header.stamp-data0.header.stamp).toSec();
+    return ret;
 }
