@@ -33,6 +33,7 @@ private:
     void removeOldData();
     void reorderData();
     geometry_msgs::PointStamped interpolate(geometry_msgs::PointStamped data0,geometry_msgs::PointStamped data1,ros::Time stamp);
+    geometry_msgs::TwistStamped interpolate(geometry_msgs::TwistStamped data0,geometry_msgs::TwistStamped data1,ros::Time stamp);
 };
 
 #endif  //PF_LOCALIZATION_DATA_BUFFER_H_INCLUDED
