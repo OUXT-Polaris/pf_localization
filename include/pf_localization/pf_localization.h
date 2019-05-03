@@ -22,6 +22,11 @@ private:
     void twistStampedCallback(const geometry_msgs::TwistStamped::ConstPtr msg);
     void pointStampedCallback(const geometry_msgs::PointStamped::ConstPtr msg);
     std::shared_ptr<ParticleFilter> pf_ptr_;
+    int num_particles_;
+    ros::NodeHandle nh_;
+    ros::NodeHandle pnh_;
+    std::string fix_position_topic_;
+    std::string twist_topic_;
 };
 
 #endif  //PF_LOCALIZATION_PF_LOCALIZATION_H_INCLUDED

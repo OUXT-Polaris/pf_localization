@@ -11,11 +11,13 @@ ParticleFilter::~ParticleFilter()
 
 void ParticleFilter::updateTwist(std::string key,geometry_msgs::TwistStamped twist)
 {
+    buf_.addData(key,twist);
     return;
 }
 
 void ParticleFilter::updatePoint(std::string key,geometry_msgs::PointStamped point)
 {
+    buf_.addData(key,point);
     return;
 }
 
