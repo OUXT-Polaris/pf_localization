@@ -68,6 +68,24 @@ bool DataBuffer::queryData(ros::Time timestamp, std::string key,geometry_msgs::P
 bool DataBuffer::queryData(ros::Time timestamp, std::string key,geometry_msgs::TwistStamped& twist)
 {
     reorderData();
+    if(twist_buffer_[key].begin()->header.stamp < timestamp)
+    {
+        return false;
+    }
+    if(twist_buffer_[key].end()->header.stamp > timestamp)
+    {
+        twist = interpolate(*(twist_buffer_[key].end()-1),*twist_buffer_[key].end(),timestamp);
+        return true;
+    }
+    for(auto itr = twist_buffer_[key].begin(); itr != (twist_buffer_[key].end()-1); itr++)
+    {
+        if(itr->header.stamp > timestamp && (itr+1)->header.stamp < timestamp)
+        {
+            twist = interpolate(*itr,*(itr+1),timestamp);
+            return true;
+        }
+    }
+    return false;
 }
 
 bool DataBuffer::queryData(ros::Time timestamp, std::string key,geometry_msgs::PointStamped& point)
