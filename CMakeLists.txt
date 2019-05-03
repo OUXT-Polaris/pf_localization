@@ -27,14 +27,11 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_library(pf_localization src/pf_localization.cpp src/particle_filter.cpp src/data_buffer.cpp)
-target_link_libraries(pf_localization ${catkin_LIBRARIES})
-
-add_executable(pf_localization_node src/pf_localization_node.cpp)
+add_executable(pf_localization_node src/pf_localization_node.cpp src/pf_localization.cpp src/particle_filter.cpp src/data_buffer.cpp)
 target_link_libraries(pf_localization_node ${catkin_LIBRARIES})
 
 # install executables/libs
-install(TARGETS pf_localization pf_localization_node
+install(TARGETS pf_localization_node
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

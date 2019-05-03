@@ -8,7 +8,6 @@
 #include <geometry_msgs/TwistStamped.h>
 #include <geometry_msgs/PointStamped.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <quaternion_operation/quaternion_operation.h>
 
 //headers in Boost
 #include <boost/optional.hpp>
@@ -24,6 +23,7 @@ public:
     void updatePoint(std::string key,geometry_msgs::PointStamped point);
     boost::optional<geometry_msgs::PoseStamped> estimatePose(ros::Time stamp);
 private:
+    DataBuffer buf_;
 };
 
 #endif  //PF_LOCALIZATION_PARTICLE_FILTER_H_INCLUDED
