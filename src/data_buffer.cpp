@@ -1,8 +1,5 @@
 #include <pf_localization/data_buffer.h>
 
-// Headers in ROS
-#include <quaternion_operation/quaternion_operation.h>
-
 DataBuffer::DataBuffer(double buffer_length) : buffer_length(buffer_length)
 {
 

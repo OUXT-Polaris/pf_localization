@@ -10,6 +10,7 @@
 #include <geometry_msgs/TwistStamped.h>
 #include <geometry_msgs/PointStamped.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <quaternion_operation/quaternion_operation.h>
 
 class DataBuffer
 {

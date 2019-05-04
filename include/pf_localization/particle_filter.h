@@ -14,6 +14,7 @@
 
 //headers in STL
 #include <map>
+#include <random>
 
 struct Particle
 {
@@ -39,7 +40,11 @@ private:
     boost::optional<geometry_msgs::TwistStamped> estimateTwist(ros::Time stamp);
     boost::optional<geometry_msgs::PointStamped> estimatePoint(ros::Time stamp);
     std::vector<Particle> particles_;
-    bool initialized;
+    boost::optional<geometry_msgs::PoseStamped> current_pose_;
+    bool initialized_;
+    std::random_device seed_gen_;
+    std::default_random_engine engine_;
+    std::normal_distribution<> dist_;
 };
 
 #endif  //PF_LOCALIZATION_PARTICLE_FILTER_H_INCLUDED
