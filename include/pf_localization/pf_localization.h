@@ -13,12 +13,18 @@
 // Headers in STL
 #include <memory>
 
+// Headers in Boost
+#include <boost/optional.hpp>
+#include <boost/thread.hpp>
+
 class PfLocalization
 {
 public:
     PfLocalization(ros::NodeHandle nh,ros::NodeHandle pnh);
     ~PfLocalization();
+    void run();
 private:
+    void updateCurrentPose();
     void twistStampedCallback(const geometry_msgs::TwistStamped::ConstPtr msg);
     void pointStampedCallback(const geometry_msgs::PointStamped::ConstPtr msg);
     std::shared_ptr<ParticleFilter> pf_ptr_;
@@ -27,6 +33,10 @@ private:
     ros::NodeHandle pnh_;
     std::string fix_position_topic_;
     std::string twist_topic_;
+    int update_rate_;
+    ros::Publisher current_pose_pub_;
+    ros::Subscriber twist_sub_;
+    ros::Subscriber point_sub_;
 };
 
 #endif  //PF_LOCALIZATION_PF_LOCALIZATION_H_INCLUDED

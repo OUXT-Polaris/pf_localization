@@ -9,6 +9,7 @@ int main(int argc, char *argv[])
     ros::NodeHandle nh;
     ros::NodeHandle pnh("~");
     PfLocalization localization(nh,pnh);
+    localization.run();
     ros::spin();
     return 0;
 }

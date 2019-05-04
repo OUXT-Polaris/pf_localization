@@ -1,6 +1,7 @@
 #include <pf_localization/particle_filter.h>
 
-ParticleFilter::ParticleFilter(int num_particles,double buffer_length) : num_particles(num_particles),buffer_length(buffer_length),buf_(buffer_length)
+ParticleFilter::ParticleFilter(int num_particles,double buffer_length) 
+    : num_particles(num_particles),buffer_length(buffer_length),buf_(buffer_length)
 {
 }
 
