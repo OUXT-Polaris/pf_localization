@@ -10,19 +10,34 @@ ParticleFilter::~ParticleFilter()
 
 }
 
-void ParticleFilter::updateTwist(std::string key,geometry_msgs::TwistStamped twist)
+void ParticleFilter::updateTwist(std::string key,double weight,geometry_msgs::TwistStamped twist)
 {
     buf_.addData(key,twist);
+    twist_weights_[key] = weight;
     return;
 }
 
-void ParticleFilter::updatePoint(std::string key,geometry_msgs::PointStamped point)
+void ParticleFilter::updatePoint(std::string key,double weight,geometry_msgs::PointStamped point)
 {
     buf_.addData(key,point);
+    point_weights_[key] = weight;
     return;
 }
 
 boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimatePose(ros::Time stamp)
 {
+    geometry_msgs::TwistStamped twist;
+    geometry_msgs::PointStamped point;
+    //if(buf_.queryData(,twist))
+    return boost::none;
+}
 
+boost::optional<geometry_msgs::TwistStamped> ParticleFilter::estimateTwist(ros::Time stamp)
+{
+    return boost::none;
+}
+
+boost::optional<geometry_msgs::PointStamped> ParticleFilter::estimatePoint(ros::Time stamp)
+{
+    return boost::none;
 }

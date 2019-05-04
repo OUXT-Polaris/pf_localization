@@ -41,12 +41,12 @@ void PfLocalization::updateCurrentPose()
 
 void PfLocalization::twistStampedCallback(const geometry_msgs::TwistStamped::ConstPtr msg)
 {
-    pf_ptr_->updateTwist(fix_position_topic_,*msg);
+    pf_ptr_->updateTwist(fix_position_topic_,1,*msg);
     return;
 }
 
 void PfLocalization::pointStampedCallback(const geometry_msgs::PointStamped::ConstPtr msg)
 {
-    pf_ptr_->updatePoint(twist_topic_,*msg);
+    pf_ptr_->updatePoint(twist_topic_,1,*msg);
     return;
 }

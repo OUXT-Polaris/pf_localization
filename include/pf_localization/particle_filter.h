@@ -12,6 +12,9 @@
 //headers in Boost
 #include <boost/optional.hpp>
 
+//headers in STL
+#include <map>
+
 class ParticleFilter
 {
 public:
@@ -19,11 +22,15 @@ public:
     ~ParticleFilter();
     const int num_particles;
     const double buffer_length;
-    void updateTwist(std::string key,geometry_msgs::TwistStamped twist);
-    void updatePoint(std::string key,geometry_msgs::PointStamped point);
+    void updateTwist(std::string key,double weight,geometry_msgs::TwistStamped twist);
+    void updatePoint(std::string key,double weight,geometry_msgs::PointStamped point);
     boost::optional<geometry_msgs::PoseStamped> estimatePose(ros::Time stamp);
 private:
     DataBuffer buf_;
+    std::map<std::string,double> twist_weights_;
+    std::map<std::string,double> point_weights_;
+    boost::optional<geometry_msgs::TwistStamped> estimateTwist(ros::Time stamp);
+    boost::optional<geometry_msgs::PointStamped> estimatePoint(ros::Time stamp);
 };
 
 #endif  //PF_LOCALIZATION_PARTICLE_FILTER_H_INCLUDED
