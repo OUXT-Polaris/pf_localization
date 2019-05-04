@@ -34,6 +34,7 @@ void PfLocalization::updateCurrentPose()
     {
         ros::Time now = ros::Time::now();
         boost::optional<geometry_msgs::PoseStamped> current_pose = pf_ptr_->estimatePose(now);
+        broadcastOdomFrame(now);
         if(current_pose)
         {
             current_pose_pub_.publish(*current_pose);
@@ -46,6 +47,18 @@ void PfLocalization::updateCurrentPose()
 void PfLocalization::broadcastOdomFrame(ros::Time stamp)
 {
     boost::optional<geometry_msgs::PoseStamped> initial_pose = pf_ptr_->getInitialPose();
+    if(initial_pose)
+    {
+        geometry_msgs::TransformStamped transform_stamped;
+        transform_stamped.header.frame_id = map_frame_;
+        transform_stamped.header.stamp = stamp;
+        transform_stamped.child_frame_id = odom_frame_;
+        transform_stamped.transform.translation.x = initial_pose->pose.position.x;
+        transform_stamped.transform.translation.y = initial_pose->pose.position.y;
+        transform_stamped.transform.translation.z = initial_pose->pose.position.z;
+        transform_stamped.transform.rotation = initial_pose->pose.orientation;
+        tf_broadcaster_.sendTransform(transform_stamped);
+    }
     return;
 }
 
