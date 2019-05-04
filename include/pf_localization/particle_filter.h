@@ -15,6 +15,12 @@
 //headers in STL
 #include <map>
 
+struct Particle
+{
+    geometry_msgs::PoseStamped pose;
+    double weight;
+};
+
 class ParticleFilter
 {
 public:
@@ -25,12 +31,15 @@ public:
     void updateTwist(std::string key,double weight,geometry_msgs::TwistStamped twist);
     void updatePoint(std::string key,double weight,geometry_msgs::PointStamped point);
     boost::optional<geometry_msgs::PoseStamped> estimatePose(ros::Time stamp);
+    void setInitialPose(geometry_msgs::PoseStamped pose);
 private:
     DataBuffer buf_;
     std::map<std::string,double> twist_weights_;
     std::map<std::string,double> point_weights_;
     boost::optional<geometry_msgs::TwistStamped> estimateTwist(ros::Time stamp);
     boost::optional<geometry_msgs::PointStamped> estimatePoint(ros::Time stamp);
+    std::vector<Particle> particles_;
+    bool initialized;
 };
 
 #endif  //PF_LOCALIZATION_PARTICLE_FILTER_H_INCLUDED

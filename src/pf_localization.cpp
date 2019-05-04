@@ -6,10 +6,12 @@ PfLocalization::PfLocalization(ros::NodeHandle nh,ros::NodeHandle pnh) : nh_(nh)
     pnh_.param<int>("update_rate", update_rate_, 30);
     pnh_.param<std::string>("fix_position_topic", fix_position_topic_, "/gps/fix/position");
     pnh_.param<std::string>("twist_topic", twist_topic_, "/twist");
+    pnh_.param<std::string>("initial_pose_topic", initial_pose_topic_, "/initialpose");
     pf_ptr_ = std::make_shared<ParticleFilter>(num_particles_,10);
     current_pose_pub_ = pnh_.advertise<geometry_msgs::PoseStamped>("current_pose",1);
     twist_sub_ = nh_.subscribe(twist_topic_,1,&PfLocalization::twistStampedCallback,this);
     point_sub_ = nh_.subscribe(fix_position_topic_,1,&PfLocalization::pointStampedCallback,this);
+    initial_pose_sub_ = nh_.subscribe(initial_pose_topic_,1,&PfLocalization::initialPoseCallback,this);
 }
 
 PfLocalization::~PfLocalization()
@@ -48,5 +50,14 @@ void PfLocalization::twistStampedCallback(const geometry_msgs::TwistStamped::Con
 void PfLocalization::pointStampedCallback(const geometry_msgs::PointStamped::ConstPtr msg)
 {
     pf_ptr_->updatePoint(twist_topic_,1,*msg);
+    return;
+}
+
+void PfLocalization::initialPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr msg)
+{
+    geometry_msgs::PoseStamped pose;
+    pose.header = msg->header;
+    pose.pose = msg->pose.pose;
+    pf_ptr_->setInitialPose(pose);
     return;
 }

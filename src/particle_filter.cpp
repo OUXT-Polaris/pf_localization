@@ -3,6 +3,8 @@
 ParticleFilter::ParticleFilter(int num_particles,double buffer_length) 
     : num_particles(num_particles),buffer_length(buffer_length),buf_(buffer_length)
 {
+    particles_ = std::vector<Particle>(num_particles);
+    initialized = false;
 }
 
 ParticleFilter::~ParticleFilter()
@@ -24,10 +26,25 @@ void ParticleFilter::updatePoint(std::string key,double weight,geometry_msgs::Po
     return;
 }
 
+void ParticleFilter::setInitialPose(geometry_msgs::PoseStamped pose)
+{
+    initialized = true;
+    for(auto itr = particles_.begin(); itr != particles_.end(); itr++)
+    {
+        itr->weight = (double)1.0/num_particles;
+        itr->pose = pose;
+    }
+    return;
+}
+
 boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimatePose(ros::Time stamp)
 {
-    boost::optional<geometry_msgs::TwistStamped> twist;
-    boost::optional<geometry_msgs::PointStamped> point;
+    boost::optional<geometry_msgs::TwistStamped> twist = estimateTwist(stamp);
+    boost::optional<geometry_msgs::PointStamped> point = estimatePoint(stamp);
+    if(twist && point && initialized)
+    {
+        
+    }
     return boost::none;
 }
 
