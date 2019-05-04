@@ -10,6 +10,10 @@
 #include <geometry_msgs/PointStamped.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <tf2_ros/transform_listener.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 // Headers in STL
 #include <memory>
@@ -36,11 +40,17 @@ private:
     std::string fix_position_topic_;
     std::string twist_topic_;
     std::string initial_pose_topic_;
+    std::string map_frame_;
+    std::string odom_frame_;
     int update_rate_;
     ros::Publisher current_pose_pub_;
     ros::Subscriber twist_sub_;
     ros::Subscriber point_sub_;
     ros::Subscriber initial_pose_sub_;
+    tf2_ros::TransformBroadcaster tf_broadcaster_;
+    tf2_ros::Buffer tf_buffer_;
+    tf2_ros::TransformListener tf_listener_;
+    void broadcastOdomFrame(ros::Time stamp);
 };
 
 #endif  //PF_LOCALIZATION_PF_LOCALIZATION_H_INCLUDED

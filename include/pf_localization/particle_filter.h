@@ -33,6 +33,7 @@ public:
     void updatePoint(std::string key,double weight,geometry_msgs::PointStamped point);
     boost::optional<geometry_msgs::PoseStamped> estimatePose(ros::Time stamp);
     void setInitialPose(geometry_msgs::PoseStamped pose);
+    boost::optional<geometry_msgs::PoseStamped> getInitialPose();
 private:
     DataBuffer buf_;
     std::map<std::string,double> twist_weights_;
@@ -41,7 +42,7 @@ private:
     boost::optional<geometry_msgs::PointStamped> estimatePoint(ros::Time stamp);
     std::vector<Particle> particles_;
     boost::optional<geometry_msgs::PoseStamped> current_pose_;
-    bool initialized_;
+    boost::optional<geometry_msgs::PoseStamped> initial_pose_;
     std::random_device seed_gen_;
     std::default_random_engine engine_;
     std::normal_distribution<> dist_;

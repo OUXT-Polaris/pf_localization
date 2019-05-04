@@ -7,11 +7,17 @@ ParticleFilter::ParticleFilter(int num_particles,double buffer_length)
 {
     particles_ = std::vector<Particle>(num_particles);
     current_pose_ = boost::none;
+    initial_pose_ = boost::none;
 }
 
 ParticleFilter::~ParticleFilter()
 {
 
+}
+
+boost::optional<geometry_msgs::PoseStamped> ParticleFilter::getInitialPose()
+{
+    return initial_pose_;
 }
 
 void ParticleFilter::updateTwist(std::string key,double weight,geometry_msgs::TwistStamped twist)
@@ -31,6 +37,7 @@ void ParticleFilter::updatePoint(std::string key,double weight,geometry_msgs::Po
 void ParticleFilter::setInitialPose(geometry_msgs::PoseStamped pose)
 {
     current_pose_ = pose;
+    initial_pose_ = pose;
     for(auto itr = particles_.begin(); itr != particles_.end(); itr++)
     {
         itr->weight = (double)1.0/num_particles;
@@ -47,10 +54,11 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimatePose(ros::Ti
     {
         double duration = (stamp - current_pose_->header.stamp).toSec();
         geometry_msgs::Vector3 orientation;
-        orientation.x = twist->twist.angular.x * duration;
-        orientation.y = twist->twist.angular.y * duration;
-        orientation.z = twist->twist.angular.z * duration;
-        //geometry_msgs::Quaternion quat = quaternion_operation::convertEulerAngleToQuaternion(orientation);
+        orientation.x = twist->twist.angular.x * duration * dist_(engine_);
+        orientation.y = twist->twist.angular.y * duration * dist_(engine_);
+        orientation.z = twist->twist.angular.z * duration * dist_(engine_);
+        geometry_msgs::Quaternion twist_angular_quat = 
+            quaternion_operation::convertEulerAngleToQuaternion(orientation);
     }
     return boost::none;
 }
