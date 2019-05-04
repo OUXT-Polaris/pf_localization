@@ -47,6 +47,22 @@ void DataBuffer::reorderData()
     }
 }
 
+void DataBuffer::queryData(ros::Time from,ros::Time to,std::string key,std::vector<geometry_msgs::PoseStamped>& pose)
+{
+    reorderData();
+    pose.clear();
+}
+
+void DataBuffer::queryData(ros::Time from,ros::Time to,std::string key,std::vector<geometry_msgs::TwistStamped>& twist)
+{
+    reorderData();
+}
+
+void DataBuffer::queryData(ros::Time from,ros::Time to,std::string key,std::vector<geometry_msgs::PointStamped>& point)
+{
+    reorderData();
+}
+
 bool DataBuffer::queryData(ros::Time timestamp, std::string key,geometry_msgs::PoseStamped& pose)
 {
     reorderData();
@@ -56,13 +72,18 @@ bool DataBuffer::queryData(ros::Time timestamp, std::string key,geometry_msgs::P
     }
     if(pose_buffer_[key].end()->header.stamp > timestamp)
     {
+        pose = interpolate(*(pose_buffer_[key].end()-1),*pose_buffer_[key].end(),timestamp);
         return true;
     }
     for(auto itr = pose_buffer_[key].begin(); itr != pose_buffer_[key].end(); itr++)
     {
-
+        if(itr->header.stamp > timestamp && (itr+1)->header.stamp < timestamp)
+        {
+            pose = interpolate(*itr,*(itr+1),timestamp);
+            return true;
+        }
     }
-    return true;
+    return false;
 }
 
 bool DataBuffer::queryData(ros::Time timestamp, std::string key,geometry_msgs::TwistStamped& twist)
