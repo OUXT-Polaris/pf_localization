@@ -53,12 +53,40 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimatePose(ros::Ti
     if(twist && point && current_pose_)
     {
         double duration = (stamp - current_pose_->header.stamp).toSec();
-        geometry_msgs::Vector3 orientation;
-        orientation.x = twist->twist.angular.x * duration * dist_(engine_);
-        orientation.y = twist->twist.angular.y * duration * dist_(engine_);
-        orientation.z = twist->twist.angular.z * duration * dist_(engine_);
-        geometry_msgs::Quaternion twist_angular_quat = 
-            quaternion_operation::convertEulerAngleToQuaternion(orientation);
+        for(auto itr = particles_.begin(); itr != particles_.end(); itr++)
+        {
+            // Transition
+            geometry_msgs::Vector3 orientation;
+            orientation.x = twist->twist.angular.x * duration * dist_(engine_);
+            orientation.y = twist->twist.angular.y * duration * dist_(engine_);
+            orientation.z = twist->twist.angular.z * duration * dist_(engine_);
+            geometry_msgs::Quaternion twist_angular_quat = 
+                quaternion_operation::convertEulerAngleToQuaternion(orientation);
+            itr->pose.pose.orientation = quaternion_operation::rotation(itr->pose.pose.orientation,twist_angular_quat);
+            itr->pose.pose.position.x = itr->pose.pose.position.x + twist->twist.linear.x * duration * dist_(engine_);
+            itr->pose.pose.position.y = itr->pose.pose.position.y + twist->twist.linear.y * duration * dist_(engine_);
+            itr->pose.pose.position.z = itr->pose.pose.position.z + twist->twist.linear.z * duration * dist_(engine_);
+            // Evaluate
+            double dist = std::sqrt(std::pow(itr->pose.pose.position.x-point->point.x,2)) 
+                + std::sqrt(std::pow(itr->pose.pose.position.y-point->point.y,2))
+                + std::sqrt(std::pow(itr->pose.pose.position.z-point->point.z,2));
+            if(dist < 0.0001)
+            {
+                dist = 0.0001;
+            }
+            itr->weight = 1/dist;
+        }
+        double heighest_weight = 0;
+        geometry_msgs::PoseStamped ret;
+        for(auto itr = particles_.begin(); itr != particles_.end(); itr++)
+        {
+            if(heighest_weight > itr->weight)
+            {
+                heighest_weight = itr->weight;
+                ret = itr->pose;
+            }
+        }
+        return ret;
     }
     return boost::none;
 }
