@@ -3,7 +3,8 @@
 #include <quaternion_operation/quaternion_operation.h>
 
 ParticleFilter::ParticleFilter(int num_particles,double buffer_length) 
-    : num_particles(num_particles),buffer_length(buffer_length),buf_(buffer_length),engine_(seed_gen_()),dist_(1.0,0.01)
+    : num_particles(num_particles),buffer_length(buffer_length),buf_(buffer_length),
+    engine_(seed_gen_()),dist_(1.0,0.01),mt_(seed_gen_()),uniform_dist_(0.0,1.0)
 {
     particles_ = std::vector<Particle>(num_particles);
     current_pose_ = boost::none;
@@ -76,16 +77,38 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimatePose(ros::Ti
             }
             itr->weight = 1/dist;
         }
+        double total_weight = 1.0;
         double heighest_weight = 0;
         geometry_msgs::PoseStamped ret;
         for(auto itr = particles_.begin(); itr != particles_.end(); itr++)
         {
+            total_weight = total_weight + itr->weight;
             if(heighest_weight > itr->weight)
             {
                 heighest_weight = itr->weight;
                 ret = itr->pose;
             }
         }
+        // Resampling
+        std::vector<int> selected_index = std::vector<int>(particles_.size());
+        double init_value = uniform_dist_(mt_) * total_weight;
+        int current_index = 0;
+        double current_total_weight = 0.0;
+        for(int i=0; i<particles_.size(); i++)
+        {
+            current_total_weight = current_total_weight + particles_[i].weight;
+            if((init_value + total_weight/(double)particles_.size()*current_index) < current_total_weight)
+            {
+                selected_index[current_index] = i;
+                current_index++;
+            }
+        }
+        std::vector<Particle> new_particles = std::vector<Particle>(particles_.size());
+        for(int i=0; i<particles_.size(); i++)
+        {
+            new_particles[i] = particles_[selected_index[i]];
+        }
+        particles_ = new_particles;
         return ret;
     }
     return boost::none;
