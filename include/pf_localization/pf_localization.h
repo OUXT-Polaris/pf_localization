@@ -37,11 +37,12 @@ private:
     int num_particles_;
     ros::NodeHandle nh_;
     ros::NodeHandle pnh_;
-    std::string fix_position_topic_;
+    std::string position_topic_;
     std::string twist_topic_;
     std::string initial_pose_topic_;
     std::string map_frame_;
     std::string odom_frame_;
+    std::string base_link_frame_;
     int update_rate_;
     ros::Publisher current_pose_pub_;
     ros::Subscriber twist_sub_;
@@ -51,6 +52,7 @@ private:
     tf2_ros::Buffer tf_buffer_;
     tf2_ros::TransformListener tf_listener_;
     void broadcastOdomFrame(ros::Time stamp);
+    void broadcastBaseLinkFrame(ros::Time stamp,geometry_msgs::PoseStamped pose);
 };
 
 #endif  //PF_LOCALIZATION_PF_LOCALIZATION_H_INCLUDED

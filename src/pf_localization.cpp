@@ -4,15 +4,16 @@ PfLocalization::PfLocalization(ros::NodeHandle nh,ros::NodeHandle pnh) : nh_(nh)
 {
     pnh_.param<int>("num_particles", num_particles_, 100);
     pnh_.param<int>("update_rate", update_rate_, 30);
-    pnh_.param<std::string>("fix_position_topic", fix_position_topic_, "/gps/fix/position");
+    pnh_.param<std::string>("position_topic", position_topic_, "/gps/fix/position");
     pnh_.param<std::string>("twist_topic", twist_topic_, "/twist");
     pnh_.param<std::string>("initial_pose_topic", initial_pose_topic_, "/initialpose");
     pnh_.param<std::string>("map_frame", map_frame_, "map");
     pnh_.param<std::string>("odom_frame", odom_frame_, "odom");
+    pnh_.param<std::string>("base_link_frame", base_link_frame_, "base_link");
     pf_ptr_ = std::make_shared<ParticleFilter>(num_particles_,10);
     current_pose_pub_ = pnh_.advertise<geometry_msgs::PoseStamped>("current_pose",1);
     twist_sub_ = nh_.subscribe(twist_topic_,1,&PfLocalization::twistStampedCallback,this);
-    point_sub_ = nh_.subscribe(fix_position_topic_,1,&PfLocalization::pointStampedCallback,this);
+    point_sub_ = nh_.subscribe(position_topic_,1,&PfLocalization::pointStampedCallback,this);
     initial_pose_sub_ = nh_.subscribe(initial_pose_topic_,1,&PfLocalization::initialPoseCallback,this);
 }
 
@@ -37,10 +38,25 @@ void PfLocalization::updateCurrentPose()
         broadcastOdomFrame(now);
         if(current_pose)
         {
+            broadcastBaseLinkFrame(now,*current_pose);
             current_pose_pub_.publish(*current_pose);
         }
         rate.sleep();
     }
+    return;
+}
+
+void PfLocalization::broadcastBaseLinkFrame(ros::Time stamp,geometry_msgs::PoseStamped pose)
+{
+    geometry_msgs::TransformStamped transform_stamped;
+    transform_stamped.header.frame_id = odom_frame_;
+    transform_stamped.header.stamp = stamp;
+    transform_stamped.child_frame_id = base_link_frame_;
+    transform_stamped.transform.translation.x = pose.pose.position.x;
+    transform_stamped.transform.translation.y = pose.pose.position.y;
+    transform_stamped.transform.translation.z = pose.pose.position.z;
+    transform_stamped.transform.rotation = pose.pose.orientation;
+    tf_broadcaster_.sendTransform(transform_stamped);
     return;
 }
 
@@ -64,7 +80,7 @@ void PfLocalization::broadcastOdomFrame(ros::Time stamp)
 
 void PfLocalization::twistStampedCallback(const geometry_msgs::TwistStamped::ConstPtr msg)
 {
-    pf_ptr_->updateTwist(fix_position_topic_,1,*msg);
+    pf_ptr_->updateTwist(position_topic_,1,*msg);
     return;
 }
 
