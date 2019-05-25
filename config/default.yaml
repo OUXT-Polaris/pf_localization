@@ -1,8 +1,8 @@
 base_link_frame : base_link
-odom_frame : odom
 map_frame : map
 initial_pose_topic : /inital_pose
 twist_topic: /twist
 position_topic : /gps/fix/position
+use_2d_pose_estimate : false
 update_rate : 30
 num_particles : 100

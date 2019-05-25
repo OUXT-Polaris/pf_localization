@@ -41,7 +41,6 @@ private:
     std::string twist_topic_;
     std::string initial_pose_topic_;
     std::string map_frame_;
-    std::string odom_frame_;
     std::string base_link_frame_;
     int update_rate_;
     ros::Publisher current_pose_pub_;
@@ -51,8 +50,10 @@ private:
     tf2_ros::TransformBroadcaster tf_broadcaster_;
     tf2_ros::Buffer tf_buffer_;
     tf2_ros::TransformListener tf_listener_;
-    void broadcastOdomFrame(ros::Time stamp);
+    bool use_2d_pose_estimate_;
     void broadcastBaseLinkFrame(ros::Time stamp,geometry_msgs::PoseStamped pose);
+    template <class C>
+    boost::optional<C> transformToMapFrame(C input);
 };
 
 #endif  //PF_LOCALIZATION_PF_LOCALIZATION_H_INCLUDED
