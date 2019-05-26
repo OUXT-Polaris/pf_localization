@@ -25,10 +25,11 @@ struct Particle
 class ParticleFilter
 {
 public:
-    ParticleFilter(int num_particles,double buffer_length);
+    ParticleFilter(int num_particles,double buffer_length,bool estimate_3d_pose);
     ~ParticleFilter();
     const int num_particles;
     const double buffer_length;
+    const bool estimate_3d_pose;
     void updateTwist(std::string key,double weight,geometry_msgs::TwistStamped twist);
     void updatePoint(std::string key,double weight,geometry_msgs::PointStamped point);
     boost::optional<geometry_msgs::PoseStamped> estimatePose(ros::Time stamp);

@@ -2,8 +2,8 @@
 
 #include <quaternion_operation/quaternion_operation.h>
 
-ParticleFilter::ParticleFilter(int num_particles,double buffer_length) 
-    : num_particles(num_particles),buffer_length(buffer_length),buf_(buffer_length),
+ParticleFilter::ParticleFilter(int num_particles,double buffer_length,bool estimate_3d_pose) 
+    : num_particles(num_particles),buffer_length(buffer_length),buf_(buffer_length),estimate_3d_pose(estimate_3d_pose),
     engine_(seed_gen_()),dist_(1.0,0.01),mt_(seed_gen_()),uniform_dist_(0.0,1.0)
 {
     particles_ = std::vector<Particle>(num_particles);
@@ -60,12 +60,18 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimatePose(ros::Ti
             geometry_msgs::Vector3 orientation;
             orientation.x = twist->twist.angular.x * duration * dist_(engine_);
             orientation.y = twist->twist.angular.y * duration * dist_(engine_);
-            orientation.z = twist->twist.angular.z * duration * dist_(engine_);
+            if(estimate_3d_pose)
+            {
+                orientation.z = twist->twist.angular.z * duration * dist_(engine_);
+            }
             geometry_msgs::Quaternion twist_angular_quat = 
                 quaternion_operation::convertEulerAngleToQuaternion(orientation);
             itr->pose.pose.orientation = quaternion_operation::rotation(itr->pose.pose.orientation,twist_angular_quat);
-            itr->pose.pose.position.x = itr->pose.pose.position.x + twist->twist.linear.x * duration * dist_(engine_);
-            itr->pose.pose.position.y = itr->pose.pose.position.y + twist->twist.linear.y * duration * dist_(engine_);
+            if(estimate_3d_pose)
+            {
+                itr->pose.pose.position.x = itr->pose.pose.position.x + twist->twist.linear.x * duration * dist_(engine_);
+                itr->pose.pose.position.y = itr->pose.pose.position.y + twist->twist.linear.y * duration * dist_(engine_);
+            }
             itr->pose.pose.position.z = itr->pose.pose.position.z + twist->twist.linear.z * duration * dist_(engine_);
             // Evaluate
             double dist = std::sqrt(std::pow(itr->pose.pose.position.x-point->point.x,2)) 

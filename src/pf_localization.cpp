@@ -10,7 +10,8 @@ PfLocalization::PfLocalization(ros::NodeHandle nh,ros::NodeHandle pnh) : nh_(nh)
     pnh_.param<std::string>("map_frame", map_frame_, "map");
     pnh_.param<std::string>("base_link_frame", base_link_frame_, "base_link");
     pnh_.param<bool>("use_2d_pose_estimate",use_2d_pose_estimate_,false);
-    pf_ptr_ = std::make_shared<ParticleFilter>(num_particles_,10);
+    pnh_.param<bool>("estimate_3d_pose",estimate_3d_pose_,false);
+    pf_ptr_ = std::make_shared<ParticleFilter>(num_particles_,10,estimate_3d_pose_);
     current_pose_pub_ = pnh_.advertise<geometry_msgs::PoseStamped>("current_pose",1);
     twist_sub_ = nh_.subscribe(twist_topic_,1,&PfLocalization::twistStampedCallback,this);
     point_sub_ = nh_.subscribe(position_topic_,1,&PfLocalization::pointStampedCallback,this);

@@ -4,5 +4,6 @@ initial_pose_topic : /inital_pose
 twist_topic: /twist
 position_topic : /gps/fix/position
 use_2d_pose_estimate : false
+estimate_3d_pose : false
 update_rate : 30
 num_particles : 100
