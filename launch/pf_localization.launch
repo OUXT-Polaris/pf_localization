@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <launch>
     <arg name="parameter_yaml_path" default="$(find pf_localization)/config/default.yaml"/>
-    <node pkg="pf_localization" type="pf_localization_node" name="pf_localization_node" output="log" respawn="false" respawn_delay="0">
+    <node pkg="pf_localization" type="pf_localization_node" name="pf_localization_node" output="screen" respawn="false" respawn_delay="0">
         <rosparam file="$(arg parameter_yaml_path)" command="load"/>
     </node>
 
     <arg name="initial_pose_yaml_path" default="$(find pf_localization)/config/initial_pose_setter.yaml"/>
-    <node pkg="pf_localization" type="initial_pose_setter.py" name="initial_pose_setter" output="log" respawn="false" respawn_delay="0">
+    <node pkg="pf_localization" type="initial_pose_setter.py" name="initial_pose_setter" output="screen" respawn="false" respawn_delay="0">
         <rosparam file="$(arg initial_pose_yaml_path)" command="load"/>
     </node>
 </launch>
