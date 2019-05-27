@@ -27,6 +27,7 @@ bool DataBuffer::compareTwistTimeStamp(geometry_msgs::TwistStamped data0,geometr
 
 void DataBuffer::reorderData()
 {
+    mtx_.lock();
     for(auto key_itr = pose_buffer_.begin(); key_itr != pose_buffer_.end(); key_itr++)
     {
         std::sort(pose_buffer_[key_itr->first].begin(), pose_buffer_[key_itr->first].end(), 
@@ -42,6 +43,7 @@ void DataBuffer::reorderData()
         std::sort(twist_buffer_[key_itr->first].begin(), twist_buffer_[key_itr->first].end(), 
             std::bind(&DataBuffer::compareTwistTimeStamp, this,std::placeholders::_1, std::placeholders::_2));
     }
+    mtx_.unlock();
 }
 
 void DataBuffer::queryData(ros::Time from,ros::Time to,std::string key,std::vector<geometry_msgs::PoseStamped>& pose)
@@ -181,6 +183,7 @@ void DataBuffer::addData(std::string key,geometry_msgs::TwistStamped twist)
 
 void DataBuffer::removeOldData()
 {
+    mtx_.lock();
     ros::Time now = ros::Time::now();
     ros::Time target_timestamp = now - ros::Duration(buffer_length);
     for(auto key_itr = pose_buffer_.begin(); key_itr != pose_buffer_.end(); key_itr++)
@@ -219,6 +222,7 @@ void DataBuffer::removeOldData()
         }
         point_buffer_[key_itr->first] = data;
     }
+    mtx_.unlock();
 }
 
 geometry_msgs::PoseStamped DataBuffer::interpolate(geometry_msgs::PoseStamped data0,geometry_msgs::PoseStamped data1,ros::Time stamp)

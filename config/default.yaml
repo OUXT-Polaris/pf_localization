@@ -1,9 +1,9 @@
 base_link_frame : base_link
 map_frame : map
-initial_pose_topic : /inital_pose
-twist_topic: /twist
+initial_pose_topic : /initialpose
+twist_topic: /imu_to_twist_node/twist
 position_topic : /gps/fix/position
-use_2d_pose_estimate : false
+use_2d_pose_estimate : true
 estimate_3d_pose : false
 update_rate : 30
 num_particles : 100

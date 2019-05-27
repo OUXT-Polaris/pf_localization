@@ -87,7 +87,7 @@ boost::optional<C> PfLocalization::transformToMapFrame(C input)
         }
         catch (tf2::TransformException &ex)
         {
-            ROS_WARN("%s",ex.what());
+            ROS_ERROR("%s",ex.what());
             return boost::none;
         }
         tf2::doTransform(input,input,transform_stamped);
@@ -100,10 +100,17 @@ void PfLocalization::initialPoseCallback(const geometry_msgs::PoseWithCovariance
     geometry_msgs::PoseStamped pose;
     pose.header = msg->header;
     pose.pose = msg->pose.pose;
-    boost::optional<geometry_msgs::PoseStamped> pose_transformed = transformToMapFrame(pose);
-    if(pose_transformed)
+    while(ros::ok())
     {
-        pf_ptr_->setInitialPose(*pose_transformed);
+        ros::Rate rate(10);
+        boost::optional<geometry_msgs::PoseStamped> pose_transformed = transformToMapFrame(pose);
+        if(pose_transformed)
+        {
+            pf_ptr_->setInitialPose(*pose_transformed);
+            break;
+        }
+        rate.sleep();
     }
+
     return;
 }
