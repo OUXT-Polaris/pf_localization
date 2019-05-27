@@ -98,12 +98,23 @@ bool DataBuffer::queryData(ros::Time timestamp, std::string key,geometry_msgs::P
 {
     reorderData();
     mtx_.lock();
+    if(pose_buffer_[key].size() == 0)
+    {
+        mtx_.unlock();
+        return false;
+    }
+    if(pose_buffer_[key].size() == 1)
+    {
+        pose = (pose_buffer_[key])[0];
+        mtx_.unlock();
+        return false;
+    }
     if(pose_buffer_[key].begin()->header.stamp > timestamp)
     {
         mtx_.unlock();
         return false;
     }
-    if(pose_buffer_[key].end()->header.stamp < timestamp)
+    if(pose_buffer_[key].end()->header.stamp > timestamp)
     {
         pose = interpolate(*(pose_buffer_[key].end()-1),*pose_buffer_[key].end(),timestamp);
         mtx_.unlock();
@@ -126,12 +137,23 @@ bool DataBuffer::queryData(ros::Time timestamp, std::string key,geometry_msgs::T
 {
     reorderData();
     mtx_.lock();
+    if(twist_buffer_[key].size() == 0)
+    {
+        mtx_.unlock();
+        return false;
+    }
+    if(twist_buffer_[key].size() == 1)
+    {
+        twist = (twist_buffer_[key])[0];
+        mtx_.unlock();
+        return false;
+    }
     if(twist_buffer_[key].begin()->header.stamp > timestamp)
     {
         mtx_.unlock();
         return false;
     }
-    if(twist_buffer_[key].end()->header.stamp < timestamp)
+    if(twist_buffer_[key].end()->header.stamp > timestamp)
     {
         twist = interpolate(*(twist_buffer_[key].end()-1),*twist_buffer_[key].end(),timestamp);
         mtx_.unlock();
@@ -154,12 +176,23 @@ bool DataBuffer::queryData(ros::Time timestamp, std::string key,geometry_msgs::P
 {
     reorderData();
     mtx_.lock();
+    if(point_buffer_[key].size() == 0)
+    {
+        mtx_.unlock();
+        return false;
+    }
+    if(point_buffer_[key].size() == 1)
+    {
+        point = (point_buffer_[key])[0];
+        mtx_.unlock();
+        return false;
+    }
     if(point_buffer_[key].begin()->header.stamp > timestamp)
     {
         mtx_.unlock();
         return false;
     }
-    if(point_buffer_[key].end()->header.stamp < timestamp)
+    if(point_buffer_[key].end()->header.stamp > timestamp)
     {
         point = interpolate(*(point_buffer_[key].end()-1),*point_buffer_[key].end(),timestamp);
         mtx_.unlock();
