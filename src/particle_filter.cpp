@@ -51,6 +51,7 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimatePose(ros::Ti
 {
     boost::optional<geometry_msgs::TwistStamped> twist = estimateTwist(stamp);
     boost::optional<geometry_msgs::PointStamped> point = estimatePoint(stamp);
+    /*
     if(twist && point && current_pose_)
     {
         double duration = (stamp - current_pose_->header.stamp).toSec();
@@ -117,6 +118,7 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimatePose(ros::Ti
         particles_ = new_particles;
         return ret;
     }
+    */
     return boost::none;
 }
 
