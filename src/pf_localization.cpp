@@ -13,11 +13,14 @@ PfLocalization::PfLocalization(ros::NodeHandle nh,ros::NodeHandle pnh) : nh_(nh)
     pnh_.param<bool>("estimate_3d_pose",estimate_3d_pose_,false);
     pf_ptr_ = std::make_shared<ParticleFilter>(num_particles_,10,estimate_3d_pose_);
     current_pose_pub_ = pnh_.advertise<geometry_msgs::PoseStamped>("current_pose",1);
-    twist_sub_ = nh_.subscribe(twist_topic_,1,&PfLocalization::twistStampedCallback,this);
-    point_sub_ = nh_.subscribe(position_topic_,1,&PfLocalization::pointStampedCallback,this);
     if(use_2d_pose_estimate_)
     {
         initial_pose_sub_ = nh_.subscribe(initial_pose_topic_,1,&PfLocalization::initialPoseCallback,this);
+    }
+    else
+    {
+        twist_sub_ = nh_.subscribe(twist_topic_,1,&PfLocalization::twistStampedCallback,this);
+        point_sub_ = nh_.subscribe(position_topic_,1,&PfLocalization::pointStampedCallback,this);
     }
 }
 
@@ -111,6 +114,7 @@ void PfLocalization::initialPoseCallback(const geometry_msgs::PoseWithCovariance
         }
         rate.sleep();
     }
-
+    twist_sub_ = nh_.subscribe(twist_topic_,1,&PfLocalization::twistStampedCallback,this);
+    point_sub_ = nh_.subscribe(position_topic_,1,&PfLocalization::pointStampedCallback,this);
     return;
 }
