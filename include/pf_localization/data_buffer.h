@@ -1,6 +1,9 @@
 #ifndef PF_LOCALIZATION_DATA_BUFFER_H_INCLUDED
 #define PF_LOCALIZATION_DATA_BUFFER_H_INCLUDED
 
+//headers in this package
+#include <pf_localization/data_buffer_base.h>
+
 //headers in STL
 #include <vector>
 #include <map>
