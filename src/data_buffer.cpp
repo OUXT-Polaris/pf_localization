@@ -51,8 +51,14 @@ void DataBuffer::queryData(ros::Time from,ros::Time to,std::string key,std::vect
     reorderData();
     pose.clear();
     mtx_.lock();
+    if(pose_buffer_.find(key) == pose_buffer_.end())
+    {
+        mtx_.unlock();
+        return;
+    }
     if(pose_buffer_[key].size() == 0)
     {
+        mtx_.unlock();
         return;
     }
     for(auto itr = pose_buffer_[key].begin(); itr != pose_buffer_[key].end(); itr++)
@@ -71,8 +77,14 @@ void DataBuffer::queryData(ros::Time from,ros::Time to,std::string key,std::vect
     reorderData();
     twist.clear();
     mtx_.lock();
+    if(twist_buffer_.find(key) == twist_buffer_.end())
+    {
+        mtx_.unlock();
+        return;
+    }
     if(twist_buffer_[key].size() == 0)
     {
+        mtx_.unlock();
         return;
     }
     for(auto itr = twist_buffer_[key].begin(); itr != twist_buffer_[key].end(); itr++)
@@ -91,8 +103,14 @@ void DataBuffer::queryData(ros::Time from,ros::Time to,std::string key,std::vect
     reorderData();
     point.clear();
     mtx_.lock();
+    if(point_buffer_.find(key) == point_buffer_.end())
+    {
+        mtx_.unlock();
+        return;
+    }
     if(point_buffer_[key].size() == 0)
     {
+        mtx_.unlock();
         return;
     }
     for(auto itr = point_buffer_[key].begin(); itr != point_buffer_[key].end(); itr++)
@@ -111,6 +129,11 @@ bool DataBuffer::queryData(ros::Time timestamp, std::string key,geometry_msgs::P
     reorderData();
     mtx_.lock();
     pose = geometry_msgs::PoseStamped();
+    if(pose_buffer_.find(key) == pose_buffer_.end())
+    {
+        mtx_.unlock();
+        return false;
+    }
     if(pose_buffer_[key].size() == 0)
     {
         mtx_.unlock();
@@ -127,9 +150,9 @@ bool DataBuffer::queryData(ros::Time timestamp, std::string key,geometry_msgs::P
         mtx_.unlock();
         return false;
     }
-    if(pose_buffer_[key].end()->header.stamp > timestamp)
+    if(pose_buffer_[key].end()->header.stamp < timestamp)
     {
-        int index = twist_buffer_[key].size()-2;
+        int index = pose_buffer_[key].size()-2;
         pose = interpolate((pose_buffer_[key])[index],(pose_buffer_[key])[index+1],timestamp);
         mtx_.unlock();
         return true;
@@ -152,6 +175,11 @@ bool DataBuffer::queryData(ros::Time timestamp, std::string key,geometry_msgs::T
     reorderData();
     mtx_.lock();
     twist = geometry_msgs::TwistStamped();
+    if(twist_buffer_.find(key) == twist_buffer_.end())
+    {
+        mtx_.unlock();
+        return false;
+    }
     if(twist_buffer_[key].size() == 0)
     {
         mtx_.unlock();
@@ -168,7 +196,7 @@ bool DataBuffer::queryData(ros::Time timestamp, std::string key,geometry_msgs::T
         mtx_.unlock();
         return false;
     }
-    if(twist_buffer_[key].end()->header.stamp > timestamp)
+    if(twist_buffer_[key].end()->header.stamp < timestamp)
     {
         int index = twist_buffer_[key].size()-2;
         twist = interpolate((twist_buffer_[key])[index],(twist_buffer_[key])[index+1],timestamp);
@@ -190,9 +218,17 @@ bool DataBuffer::queryData(ros::Time timestamp, std::string key,geometry_msgs::T
 
 bool DataBuffer::queryData(ros::Time timestamp, std::string key,geometry_msgs::PointStamped& point)
 {
+    //ROS_ERROR_STREAM("test0");
     reorderData();
+    //ROS_ERROR_STREAM("test1");
     mtx_.lock();
+    //ROS_ERROR_STREAM("test2");
     point = geometry_msgs::PointStamped();
+    if(point_buffer_.find(key) == point_buffer_.end())
+    {
+        mtx_.unlock();
+        return false;
+    }
     if(point_buffer_[key].size() == 0)
     {
         mtx_.unlock();
@@ -209,9 +245,9 @@ bool DataBuffer::queryData(ros::Time timestamp, std::string key,geometry_msgs::P
         mtx_.unlock();
         return false;
     }
-    if(point_buffer_[key].end()->header.stamp > timestamp)
+    if(point_buffer_[key].end()->header.stamp < timestamp)
     {
-        int index = twist_buffer_[key].size()-2;
+        int index = point_buffer_[key].size()-2;
         point = interpolate((point_buffer_[key])[index],(point_buffer_[key])[index+1],timestamp);
         mtx_.unlock();
         return true;

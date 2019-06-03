@@ -17,6 +17,7 @@
 
 // Headers in STL
 #include <memory>
+#include <mutex>
 
 // Headers in Boost
 #include <boost/optional.hpp>
@@ -33,6 +34,7 @@ private:
     void twistStampedCallback(const geometry_msgs::TwistStamped::ConstPtr msg);
     void pointStampedCallback(const geometry_msgs::PointStamped::ConstPtr msg);
     void initialPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr msg);
+    std::mutex mtx_;
     std::shared_ptr<ParticleFilter> pf_ptr_;
     int num_particles_;
     ros::NodeHandle nh_;

@@ -49,8 +49,8 @@ void ParticleFilter::setInitialPose(geometry_msgs::PoseStamped pose)
 
 boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimatePose(ros::Time stamp)
 {
-    boost::optional<geometry_msgs::TwistStamped> twist = estimateTwist(stamp);
-    boost::optional<geometry_msgs::PointStamped> point = estimatePoint(stamp);
+    //boost::optional<geometry_msgs::TwistStamped> twist = estimateTwist(stamp);
+    boost::optional<geometry_msgs::PointStamped> point = estimatePoint(stamp); // Infinite Loop contains
     /*
     if(twist && point && current_pose_)
     {
@@ -59,38 +59,38 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimatePose(ros::Ti
         {
             // Transition
             geometry_msgs::Vector3 orientation;
-            orientation.x = twist->twist.angular.x * duration * dist_(engine_);
-            orientation.y = twist->twist.angular.y * duration * dist_(engine_);
             if(estimate_3d_pose)
             {
-                orientation.z = twist->twist.angular.z * duration * dist_(engine_);
+                orientation.x = twist->twist.angular.x * duration * dist_(engine_);
+                orientation.y = twist->twist.angular.y * duration * dist_(engine_);
             }
+            orientation.z = twist->twist.angular.z * duration * dist_(engine_);
             geometry_msgs::Quaternion twist_angular_quat = 
                 quaternion_operation::convertEulerAngleToQuaternion(orientation);
             itr->pose.pose.orientation = quaternion_operation::rotation(itr->pose.pose.orientation,twist_angular_quat);
             if(estimate_3d_pose)
             {
-                itr->pose.pose.position.x = itr->pose.pose.position.x + twist->twist.linear.x * duration * dist_(engine_);
-                itr->pose.pose.position.y = itr->pose.pose.position.y + twist->twist.linear.y * duration * dist_(engine_);
+                itr->pose.pose.position.z = itr->pose.pose.position.z + twist->twist.linear.z * duration * dist_(engine_);
             }
-            itr->pose.pose.position.z = itr->pose.pose.position.z + twist->twist.linear.z * duration * dist_(engine_);
+            itr->pose.pose.position.x = itr->pose.pose.position.x + twist->twist.linear.x * duration * dist_(engine_);
+            itr->pose.pose.position.y = itr->pose.pose.position.y + twist->twist.linear.y * duration * dist_(engine_);
             // Evaluate
-            double dist = std::sqrt(std::pow(itr->pose.pose.position.x-point->point.x,2)) 
-                + std::sqrt(std::pow(itr->pose.pose.position.y-point->point.y,2))
-                + std::sqrt(std::pow(itr->pose.pose.position.z-point->point.z,2));
+            double dist = std::sqrt(std::pow(itr->pose.pose.position.x-point->point.x,2)
+                + std::pow(itr->pose.pose.position.y-point->point.y,2)
+                + std::pow(itr->pose.pose.position.z-point->point.z,2));
             if(dist < 0.0001)
             {
                 dist = 0.0001;
             }
             itr->weight = 1/dist;
         }
-        double total_weight = 1.0;
+        double total_weight = 0.0;
         double heighest_weight = 0;
         geometry_msgs::PoseStamped ret;
         for(auto itr = particles_.begin(); itr != particles_.end(); itr++)
         {
             total_weight = total_weight + itr->weight;
-            if(heighest_weight > itr->weight)
+            if(heighest_weight < itr->weight)
             {
                 heighest_weight = itr->weight;
                 ret = itr->pose;
@@ -101,6 +101,7 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimatePose(ros::Ti
         double init_value = uniform_dist_(mt_) * total_weight;
         int current_index = 0;
         double current_total_weight = 0.0;
+        ROS_ERROR_STREAM(particles_.size());
         for(int i=0; i<particles_.size(); i++)
         {
             current_total_weight = current_total_weight + particles_[i].weight;
@@ -116,9 +117,11 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimatePose(ros::Ti
             new_particles[i] = particles_[selected_index[i]];
         }
         particles_ = new_particles;
+        current_pose_ = ret;
         return ret;
     }
     */
+    ROS_ERROR_STREAM("return none");
     return boost::none;
 }
 

@@ -20,8 +20,8 @@ class InitialPoseSetter:
         if self.published == False:
             initial_pose = PoseWithCovarianceStamped()
             geopoint = geodesy.utm.fromLatLong(fix_data.latitude,fix_data.longitude)
-            initial_pose.pose.pose.position.x = geopoint.easting
-            initial_pose.pose.pose.position.y = geopoint.northing
+            initial_pose.pose.pose.position.x = geopoint.northing
+            initial_pose.pose.pose.position.y = geopoint.easting * -1
             initial_pose.pose.pose.position.z = fix_data.altitude
             initial_pose.pose.pose.orientation = self.eulerToQuaternion(self.roll,self.pitch,self.yaw)
             initial_pose.header.frame_id = self.map_frame
