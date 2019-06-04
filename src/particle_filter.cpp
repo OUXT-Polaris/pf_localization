@@ -3,7 +3,7 @@
 #include <quaternion_operation/quaternion_operation.h>
 
 ParticleFilter::ParticleFilter(int num_particles,double buffer_length,bool estimate_3d_pose) 
-    : num_particles(num_particles),buffer_length(buffer_length),buf_(buffer_length),estimate_3d_pose(estimate_3d_pose),
+    : num_particles(num_particles),buffer_length(buffer_length),estimate_3d_pose(estimate_3d_pose),
     engine_(seed_gen_()),dist_(1.0,0.01),mt_(seed_gen_()),uniform_dist_(0.0,1.0),
     buffer_manager_(buffer_length)
 {
@@ -24,14 +24,14 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::getInitialPose()
 
 void ParticleFilter::updateTwist(std::string key,double weight,geometry_msgs::TwistStamped twist)
 {
-    buf_.addData(key,twist);
+    buffer_manager_.addData(key,twist);
     twist_weights_[key] = weight;
     return;
 }
 
 void ParticleFilter::updatePoint(std::string key,double weight,geometry_msgs::PointStamped point)
 {
-    buf_.addData(key,point);
+    buffer_manager_.addData(key,point);
     point_weights_[key] = weight;
     return;
 }
@@ -133,7 +133,7 @@ boost::optional<geometry_msgs::TwistStamped> ParticleFilter::estimateTwist(ros::
     for(auto itr = twist_weights_.begin(); itr != twist_weights_.end(); itr++)
     {
         geometry_msgs::TwistStamped twist;
-        if(buf_.queryData(stamp,itr->first,twist))
+        if(buffer_manager_.queryData(stamp,itr->first,twist))
         {
             std::pair<double,geometry_msgs::TwistStamped> pair;
             total_weight = total_weight + itr->second;
@@ -170,7 +170,7 @@ boost::optional<geometry_msgs::PointStamped> ParticleFilter::estimatePoint(ros::
     for(auto itr = point_weights_.begin(); itr != point_weights_.end(); itr++)
     {
         geometry_msgs::PointStamped point;
-        if(buf_.queryData(stamp,itr->first,point))
+        if(buffer_manager_.queryData(stamp,itr->first,point))
         {
             std::pair<double,geometry_msgs::PointStamped> pair;
             total_weight = total_weight + itr->second;

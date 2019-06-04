@@ -38,7 +38,7 @@ public:
     boost::optional<geometry_msgs::PoseStamped> getInitialPose();
 private:
     BufferManager buffer_manager_;
-    DataBuffer buf_;
+    //DataBuffer buf_;
     std::map<std::string,double> twist_weights_;
     std::map<std::string,double> point_weights_;
     boost::optional<geometry_msgs::TwistStamped> estimateTwist(ros::Time stamp);

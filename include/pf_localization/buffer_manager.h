@@ -9,17 +9,18 @@
 // headers in stl
 #include <vector>
 #include <memory>
-#include <type_traits>
 
 class BufferManager
 {
 public:
     BufferManager(double buffer_length);
     ~BufferManager();
-    template <typename T>
-    bool addData(std::string key,T data);
-    template <typename T>
-    bool queryData(ros::Time stamp,std::string key,T& data);
+    bool addData(std::string key,geometry_msgs::TwistStamped data);
+    bool addData(std::string key,geometry_msgs::PointStamped data);
+    bool addData(std::string key,geometry_msgs::PoseStamped data);
+    bool queryData(ros::Time stamp,std::string key,geometry_msgs::TwistStamped data);
+    bool queryData(ros::Time stamp,std::string key,geometry_msgs::PointStamped data);
+    bool queryData(ros::Time stamp,std::string key,geometry_msgs::PoseStamped data);
     const double buffer_length;
 private:
     std::vector<std::shared_ptr<TwistDataBuffer> > twist_data_buf_ptrs_;
