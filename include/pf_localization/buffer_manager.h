@@ -8,15 +8,18 @@
 
 // headers in stl
 #include <vector>
+#include <memory>
 
 class BufferManager
 {
 public:
-    BufferManager();
+    BufferManager(double buffer_length);
     ~BufferManager();
+    void addPointData(std::string key,geometry_msgs::PointStamped data);
+    const double buffer_length;
 private:
     std::vector<TwistDataBuffer> twist_data_bufs_;
-    std::vector<PointDataBuffer> point_data_bufs_;
+    std::vector<std::shared_ptr<PointDataBuffer> > point_data_bufs_;
     std::vector<PoseDataBuffer> pose_data_bufs_;
 };
 
