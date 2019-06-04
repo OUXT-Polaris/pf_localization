@@ -3,6 +3,7 @@
 
 //headers in this package
 #include <pf_localization/data_buffer.h>
+#include <pf_localization/buffer_manager.h>
 
 //headers in ROS
 #include <geometry_msgs/TwistStamped.h>
@@ -36,6 +37,7 @@ public:
     void setInitialPose(geometry_msgs::PoseStamped pose);
     boost::optional<geometry_msgs::PoseStamped> getInitialPose();
 private:
+    BufferManager buffer_manager_;
     DataBuffer buf_;
     std::map<std::string,double> twist_weights_;
     std::map<std::string,double> point_weights_;
