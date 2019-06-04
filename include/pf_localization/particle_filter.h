@@ -2,7 +2,6 @@
 #define PF_LOCALIZATION_PARTICLE_FILTER_H_INCLUDED
 
 //headers in this package
-#include <pf_localization/data_buffer.h>
 #include <pf_localization/buffer_manager.h>
 
 //headers in ROS
