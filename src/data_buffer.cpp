@@ -189,7 +189,7 @@ bool DataBuffer::queryData(ros::Time timestamp, std::string key,geometry_msgs::T
     {
         twist = (twist_buffer_[key])[0];
         mtx_.unlock();
-        return false;
+        return true;
     }
     if(twist_buffer_[key].begin()->header.stamp > timestamp)
     {
@@ -218,11 +218,8 @@ bool DataBuffer::queryData(ros::Time timestamp, std::string key,geometry_msgs::T
 
 bool DataBuffer::queryData(ros::Time timestamp, std::string key,geometry_msgs::PointStamped& point)
 {
-    //ROS_ERROR_STREAM("test0");
     reorderData();
-    //ROS_ERROR_STREAM("test1");
     mtx_.lock();
-    //ROS_ERROR_STREAM("test2");
     point = geometry_msgs::PointStamped();
     if(point_buffer_.find(key) == point_buffer_.end())
     {
@@ -238,7 +235,7 @@ bool DataBuffer::queryData(ros::Time timestamp, std::string key,geometry_msgs::P
     {
         point = (point_buffer_[key])[0];
         mtx_.unlock();
-        return false;
+        return true;
     }
     if(point_buffer_[key].begin()->header.stamp > timestamp)
     {
