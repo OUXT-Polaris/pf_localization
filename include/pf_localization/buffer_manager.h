@@ -18,6 +18,8 @@ public:
     ~BufferManager();
     template <typename T>
     bool addData(std::string key,T data);
+    template <typename T>
+    bool queryData(ros::Time stamp,std::string key,T& data);
     const double buffer_length;
 private:
     std::vector<std::shared_ptr<TwistDataBuffer> > twist_data_buf_ptrs_;
