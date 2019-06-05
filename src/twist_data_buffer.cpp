@@ -26,23 +26,23 @@ bool TwistDataBuffer::queryData(ros::Time timestamp, std::string key,geometry_ms
         mtx.unlock();
         return true;
     }
-    if(data.begin()->header.stamp > timestamp)
+    if(data[0].header.stamp > timestamp)
     {
         mtx.unlock();
         return false;
     }
-    if(data.end()->header.stamp < timestamp)
+    if(data[data.size()-1].header.stamp < timestamp)
     {
         int index = data.size()-2;
         twist = interpolate(data[index],(data)[index+1],timestamp);
         mtx.unlock();
         return true;
     }
-    for(auto itr = data.begin(); itr != (data.end()-1); itr++)
+    for(int i =0; i<data.size()-1; i++)
     {
-        if(itr->header.stamp < timestamp && timestamp < (itr+1)->header.stamp)
+        if(data[i].header.stamp < timestamp && timestamp < data[i+1].header.stamp)
         {
-            twist = interpolate(*itr,*(itr+1),timestamp);
+            twist = interpolate(data[i],data[i+1],timestamp);
             mtx.unlock();
             return true;
         }

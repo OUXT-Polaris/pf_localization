@@ -50,9 +50,8 @@ void ParticleFilter::setInitialPose(geometry_msgs::PoseStamped pose)
 
 boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimatePose(ros::Time stamp)
 {
-    //boost::optional<geometry_msgs::TwistStamped> twist = estimateTwist(stamp);
-    boost::optional<geometry_msgs::PointStamped> point = estimatePoint(stamp); // Infinite Loop contains
-    /*
+    boost::optional<geometry_msgs::TwistStamped> twist = estimateTwist(stamp);
+    boost::optional<geometry_msgs::PointStamped> point = estimatePoint(stamp);
     if(twist && point && current_pose_)
     {
         double duration = (stamp - current_pose_->header.stamp).toSec();
@@ -102,7 +101,6 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimatePose(ros::Ti
         double init_value = uniform_dist_(mt_) * total_weight;
         int current_index = 0;
         double current_total_weight = 0.0;
-        ROS_ERROR_STREAM(particles_.size());
         for(int i=0; i<particles_.size(); i++)
         {
             current_total_weight = current_total_weight + particles_[i].weight;
@@ -121,8 +119,6 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimatePose(ros::Ti
         current_pose_ = ret;
         return ret;
     }
-    */
-    ROS_ERROR_STREAM("return none");
     return boost::none;
 }
 

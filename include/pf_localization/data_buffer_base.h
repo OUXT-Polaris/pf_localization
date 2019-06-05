@@ -13,7 +13,10 @@ template<class T>
 class DataBufferBase
 {
 public:
-    DataBufferBase(std::string key,double buffer_length) : key(key),buffer_length(buffer_length){}
+    DataBufferBase(std::string key,double buffer_length) : key(key),buffer_length(buffer_length)
+    {
+        data_ = std::vector<T>(0);
+    }
     ~DataBufferBase(){}
     void queryData(ros::Time from,ros::Time to,std::string key,std::vector<T>& ret)
     {
