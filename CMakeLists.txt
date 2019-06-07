@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   tf2_ros
   tf2_geometry_msgs
+  geometry_msgs_data_buffer
 )
 
 find_package(Eigen3 REQUIRED)
@@ -17,7 +18,7 @@ find_package(Eigen3 REQUIRED)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES pf_localization
-  CATKIN_DEPENDS geometry_msgs quaternion_operation roscpp
+  CATKIN_DEPENDS geometry_msgs quaternion_operation roscpp geometry_msgs_data_buffer
 #  DEPENDS system_lib
 )
 
@@ -27,8 +28,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(pf_localization_node src/pf_localization_node.cpp src/pf_localization.cpp src/particle_filter.cpp 
-  src/pose_data_buffer.cpp src/point_data_buffer.cpp src/twist_data_buffer.cpp src/buffer_manager.cpp)
+add_executable(pf_localization_node src/pf_localization_node.cpp src/pf_localization.cpp src/particle_filter.cpp src/buffer_manager.cpp)
 target_link_libraries(pf_localization_node ${catkin_LIBRARIES} glog)
 
 # install executables/libs
