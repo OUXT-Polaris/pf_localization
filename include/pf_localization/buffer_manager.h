@@ -20,9 +20,9 @@ namespace data_buffer
         bool addData(std::string key,geometry_msgs::TwistStamped data);
         bool addData(std::string key,geometry_msgs::PointStamped data);
         bool addData(std::string key,geometry_msgs::PoseStamped data);
-        bool queryData(ros::Time stamp,std::string key,geometry_msgs::TwistStamped data);
-        bool queryData(ros::Time stamp,std::string key,geometry_msgs::PointStamped data);
-        bool queryData(ros::Time stamp,std::string key,geometry_msgs::PoseStamped data);
+        bool queryData(ros::Time stamp,std::string key,geometry_msgs::TwistStamped& data);
+        bool queryData(ros::Time stamp,std::string key,geometry_msgs::PointStamped& data);
+        bool queryData(ros::Time stamp,std::string key,geometry_msgs::PoseStamped& data);
         const double buffer_length;
     private:
         std::vector<std::shared_ptr<TwistStampedDataBuffer> > twist_data_buf_ptrs_;

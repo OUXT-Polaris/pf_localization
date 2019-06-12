@@ -64,6 +64,11 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimatePose(ros::Ti
                 orientation.x = twist->twist.angular.x * duration * dist_(engine_);
                 orientation.y = twist->twist.angular.y * duration * dist_(engine_);
             }
+            else
+            {
+                orientation.x = 0.0;
+                orientation.y = 0.0;
+            }
             orientation.z = twist->twist.angular.z * duration * dist_(engine_);
             geometry_msgs::Quaternion twist_angular_quat = 
                 quaternion_operation::convertEulerAngleToQuaternion(orientation);
@@ -71,6 +76,10 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimatePose(ros::Ti
             if(estimate_3d_pose)
             {
                 itr->pose.pose.position.z = itr->pose.pose.position.z + twist->twist.linear.z * duration * dist_(engine_);
+            }
+            else
+            {
+                itr->pose.pose.position.z = 0;
             }
             itr->pose.pose.position.x = itr->pose.pose.position.x + twist->twist.linear.x * duration * dist_(engine_);
             itr->pose.pose.position.y = itr->pose.pose.position.y + twist->twist.linear.y * duration * dist_(engine_);

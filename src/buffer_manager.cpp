@@ -72,7 +72,7 @@ namespace data_buffer
         return true;
     }
 
-    bool BufferManager::queryData(ros::Time stamp,std::string key,geometry_msgs::TwistStamped data)
+    bool BufferManager::queryData(ros::Time stamp,std::string key,geometry_msgs::TwistStamped& data)
     {
         for(auto buf_itr = twist_data_buf_ptrs_.begin(); buf_itr != twist_data_buf_ptrs_.end(); buf_itr++)
         {
@@ -94,7 +94,7 @@ namespace data_buffer
         return false;
     }
 
-    bool BufferManager::queryData(ros::Time stamp,std::string key,geometry_msgs::PointStamped data)
+    bool BufferManager::queryData(ros::Time stamp,std::string key,geometry_msgs::PointStamped& data)
     {
         for(auto buf_itr = point_data_buf_ptrs_.begin(); buf_itr != point_data_buf_ptrs_.end(); buf_itr++)
         {
@@ -116,7 +116,7 @@ namespace data_buffer
         return false;
     }
 
-    bool BufferManager::queryData(ros::Time stamp,std::string key,geometry_msgs::PoseStamped data)
+    bool BufferManager::queryData(ros::Time stamp,std::string key,geometry_msgs::PoseStamped& data)
     {
         for(auto buf_itr = pose_data_buf_ptrs_.begin(); buf_itr != pose_data_buf_ptrs_.end(); buf_itr++)
         {
