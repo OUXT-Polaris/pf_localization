@@ -9,7 +9,7 @@
     <arg name="estimate_3d_pose" default="false"/>
     <arg name="update_rate" default="30"/>
     <arg name="num_particles" default="100"/>
-    <arg name="publish_marker" value="true"/>
+    <arg name="publish_marker" default="true"/>
 
     <node pkg="pf_localization" type="pf_localization_node" name="pf_localization_node" output="screen" respawn="false" respawn_delay="0">
         <param name="base_link_frame" value="$(arg base_link_frame)"/>

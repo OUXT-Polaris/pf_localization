@@ -12,7 +12,7 @@ PfLocalization::PfLocalization(ros::NodeHandle nh,ros::NodeHandle pnh) : nh_(nh)
     pnh_.param<std::string>("base_link_frame", base_link_frame_, "base_link");
     pnh_.param<bool>("use_2d_pose_estimate",use_2d_pose_estimate_,false);
     pnh_.param<bool>("estimate_3d_pose",estimate_3d_pose_,false);
-    pnh_.param<bool>("estimate_3d_pose",publish_marker_,false);
+    pnh_.param<bool>("publish_marker",publish_marker_,false);
     pf_ptr_ = std::make_shared<ParticleFilter>(num_particles_,10,estimate_3d_pose_);
     current_pose_pub_ = pnh_.advertise<geometry_msgs::PoseStamped>("current_pose",1);
     if(publish_marker_)
@@ -72,9 +72,14 @@ void PfLocalization::updateCurrentPose()
                 single_marker.color.a = 1.0;
                 single_marker.action = single_marker.ADD;
                 single_marker.frame_locked = true;
+                single_marker.scale.x = 1.0;
+                single_marker.scale.y = 0.1;
+                single_marker.scale.z = 0.1;
+                single_marker.ns = "marker" + std::to_string(id);
                 marker.markers.push_back(single_marker);
                 id++;
             }
+            marker_pub_.publish(marker);
         }
         mtx_.unlock();
         rate.sleep();

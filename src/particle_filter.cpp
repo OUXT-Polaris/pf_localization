@@ -4,7 +4,7 @@
 
 ParticleFilter::ParticleFilter(int num_particles,double buffer_length,bool estimate_3d_pose) 
     : num_particles(num_particles),buffer_length(buffer_length),estimate_3d_pose(estimate_3d_pose),
-    engine_(seed_gen_()),dist_(1.0,0.01),mt_(seed_gen_()),uniform_dist_(0.0,1.0),
+    engine_(seed_gen_()),dist_(1.0,1.0),mt_(seed_gen_()),uniform_dist_(0.0,1.0),
     pose_buf_("/pose",buffer_length),twist_buf_("/twist",buffer_length)
 {
     particles_ = std::vector<Particle>(num_particles);
