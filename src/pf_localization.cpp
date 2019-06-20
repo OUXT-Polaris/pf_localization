@@ -4,7 +4,7 @@ PfLocalization::PfLocalization(ros::NodeHandle nh,ros::NodeHandle pnh) : nh_(nh)
 {
     pnh_.param<int>("num_particles", num_particles_, 100);
     pnh_.param<int>("update_rate", update_rate_, 20);
-    pnh_.param<std::string>("position_topic", position_topic_, "/gps/fix/position");
+    pnh_.param<std::string>("position_topic", pose_topic_, "/gps/fix/position");
     pnh_.param<std::string>("twist_topic", twist_topic_, "/twist");
     pnh_.param<std::string>("initial_pose_topic", initial_pose_topic_, "/initialpose");
     pnh_.param<std::string>("map_frame", map_frame_, "map");
@@ -20,7 +20,7 @@ PfLocalization::PfLocalization(ros::NodeHandle nh,ros::NodeHandle pnh) : nh_(nh)
     else
     {
         twist_sub_ = nh_.subscribe(twist_topic_,1,&PfLocalization::twistStampedCallback,this);
-        point_sub_ = nh_.subscribe(position_topic_,1,&PfLocalization::pointStampedCallback,this);
+        pose_sub_ = nh_.subscribe(pose_topic_,1,&PfLocalization::poseStampedCallback,this);
     }
 }
 
@@ -42,7 +42,7 @@ void PfLocalization::updateCurrentPose()
     {
         mtx_.lock();
         ros::Time now = ros::Time::now();
-        boost::optional<geometry_msgs::PoseStamped> current_pose = pf_ptr_->estimatePose(now);
+        boost::optional<geometry_msgs::PoseStamped> current_pose = pf_ptr_->estimateCurrentPose(now);
         if(current_pose)
         {
             broadcastBaseLinkFrame(now,*current_pose);
@@ -71,15 +71,15 @@ void PfLocalization::broadcastBaseLinkFrame(ros::Time stamp,geometry_msgs::PoseS
 void PfLocalization::twistStampedCallback(const geometry_msgs::TwistStamped::ConstPtr msg)
 {
     mtx_.lock();
-    pf_ptr_->updateTwist(twist_topic_,1,*msg);
+    pf_ptr_->updateTwist(*msg);
     mtx_.unlock();
     return;
 }
 
-void PfLocalization::pointStampedCallback(const geometry_msgs::PointStamped::ConstPtr msg)
+void PfLocalization::poseStampedCallback(const geometry_msgs::PoseStamped::ConstPtr msg)
 {
     mtx_.lock();
-    pf_ptr_->updatePoint(position_topic_,1,*msg);
+    pf_ptr_->updatePose(*msg);
     mtx_.unlock();
     return;
 }
@@ -122,6 +122,6 @@ void PfLocalization::initialPoseCallback(const geometry_msgs::PoseWithCovariance
         rate.sleep();
     }
     twist_sub_ = nh_.subscribe(twist_topic_,1,&PfLocalization::twistStampedCallback,this);
-    point_sub_ = nh_.subscribe(position_topic_,1,&PfLocalization::pointStampedCallback,this);
+    pose_sub_ = nh_.subscribe(pose_topic_,1,&PfLocalization::poseStampedCallback,this);
     return;
 }

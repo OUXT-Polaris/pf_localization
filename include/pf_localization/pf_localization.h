@@ -32,14 +32,14 @@ public:
 private:
     void updateCurrentPose();
     void twistStampedCallback(const geometry_msgs::TwistStamped::ConstPtr msg);
-    void pointStampedCallback(const geometry_msgs::PointStamped::ConstPtr msg);
+    void poseStampedCallback(const geometry_msgs::PoseStamped::ConstPtr msg);
     void initialPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr msg);
     std::mutex mtx_;
     std::shared_ptr<ParticleFilter> pf_ptr_;
     int num_particles_;
     ros::NodeHandle nh_;
     ros::NodeHandle pnh_;
-    std::string position_topic_;
+    std::string pose_topic_;
     std::string twist_topic_;
     std::string initial_pose_topic_;
     std::string map_frame_;
@@ -47,7 +47,7 @@ private:
     int update_rate_;
     ros::Publisher current_pose_pub_;
     ros::Subscriber twist_sub_;
-    ros::Subscriber point_sub_;
+    ros::Subscriber pose_sub_;
     ros::Subscriber initial_pose_sub_;
     tf2_ros::TransformBroadcaster tf_broadcaster_;
     tf2_ros::Buffer tf_buffer_;

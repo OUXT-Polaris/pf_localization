@@ -1,13 +1,12 @@
 #ifndef PF_LOCALIZATION_PARTICLE_FILTER_H_INCLUDED
 #define PF_LOCALIZATION_PARTICLE_FILTER_H_INCLUDED
 
-//headers in this package
-#include <pf_localization/buffer_manager.h>
-
 //headers in ROS
 #include <geometry_msgs/TwistStamped.h>
 #include <geometry_msgs/PointStamped.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs_data_buffer/pose_stamped_data_buffer.h>
+#include <geometry_msgs_data_buffer/twist_stamped_data_buffer.h>
 
 //headers in Boost
 #include <boost/optional.hpp>
@@ -30,17 +29,19 @@ public:
     const int num_particles;
     const double buffer_length;
     const bool estimate_3d_pose;
-    void updateTwist(std::string key,double weight,geometry_msgs::TwistStamped twist);
-    void updatePoint(std::string key,double weight,geometry_msgs::PointStamped point);
-    boost::optional<geometry_msgs::PoseStamped> estimatePose(ros::Time stamp);
+    void updateTwist(geometry_msgs::TwistStamped twist);
+    void updatePose(geometry_msgs::PoseStamped pose);
+    //void updateTwist(std::string key,double weight,geometry_msgs::TwistStamped twist);
+    //void updatePoint(std::string key,double weight,geometry_msgs::PointStamped point);
+    boost::optional<geometry_msgs::PoseStamped> estimateCurrentPose(ros::Time stamp);
     void setInitialPose(geometry_msgs::PoseStamped pose);
     boost::optional<geometry_msgs::PoseStamped> getInitialPose();
 private:
-    data_buffer::BufferManager buffer_manager_;
+    //data_buffer::BufferManager buffer_manager_;
     std::map<std::string,double> twist_weights_;
     std::map<std::string,double> point_weights_;
     boost::optional<geometry_msgs::TwistStamped> estimateTwist(ros::Time stamp);
-    boost::optional<geometry_msgs::PointStamped> estimatePoint(ros::Time stamp);
+    boost::optional<geometry_msgs::PoseStamped> estimatePose(ros::Time stamp);
     std::vector<Particle> particles_;
     boost::optional<geometry_msgs::PoseStamped> current_pose_;
     boost::optional<geometry_msgs::PoseStamped> initial_pose_;
@@ -49,6 +50,8 @@ private:
     std::normal_distribution<> dist_;
     std::mt19937 mt_;
     std::uniform_real_distribution<double> uniform_dist_;
+    data_buffer::PoseStampedDataBuffer pose_buf_;
+    data_buffer::TwistStampedDataBuffer twist_buf_;
 };
 
 #endif  //PF_LOCALIZATION_PARTICLE_FILTER_H_INCLUDED

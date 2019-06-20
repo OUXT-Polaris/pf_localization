@@ -5,7 +5,7 @@
 ParticleFilter::ParticleFilter(int num_particles,double buffer_length,bool estimate_3d_pose) 
     : num_particles(num_particles),buffer_length(buffer_length),estimate_3d_pose(estimate_3d_pose),
     engine_(seed_gen_()),dist_(1.0,0.01),mt_(seed_gen_()),uniform_dist_(0.0,1.0),
-    buffer_manager_(buffer_length)
+    pose_buf_("/pose",buffer_length),twist_buf_("/twist",buffer_length)
 {
     particles_ = std::vector<Particle>(num_particles);
     current_pose_ = boost::none;
@@ -22,18 +22,14 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::getInitialPose()
     return initial_pose_;
 }
 
-void ParticleFilter::updateTwist(std::string key,double weight,geometry_msgs::TwistStamped twist)
+void ParticleFilter::updateTwist(geometry_msgs::TwistStamped twist)
 {
-    buffer_manager_.addData(key,twist);
-    twist_weights_[key] = weight;
-    return;
+    twist_buf_.addData(twist);
 }
 
-void ParticleFilter::updatePoint(std::string key,double weight,geometry_msgs::PointStamped point)
+void ParticleFilter::updatePose(geometry_msgs::PoseStamped pose)
 {
-    buffer_manager_.addData(key,point);
-    point_weights_[key] = weight;
-    return;
+    pose_buf_.addData(pose);
 }
 
 void ParticleFilter::setInitialPose(geometry_msgs::PoseStamped pose)
@@ -47,9 +43,15 @@ void ParticleFilter::setInitialPose(geometry_msgs::PoseStamped pose)
     }
     return;
 }
-
+ 
 boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimatePose(ros::Time stamp)
 {
+    return boost::none;
+}
+
+boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimateCurrentPose(ros::Time stamp)
+{
+    /*
     boost::optional<geometry_msgs::TwistStamped> twist = estimateTwist(stamp);
     boost::optional<geometry_msgs::PointStamped> point = estimatePoint(stamp);
     if(twist && point && current_pose_)
@@ -128,76 +130,11 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimatePose(ros::Ti
         current_pose_ = ret;
         return ret;
     }
+    */
     return boost::none;
 }
 
 boost::optional<geometry_msgs::TwistStamped> ParticleFilter::estimateTwist(ros::Time stamp)
 {
-    std::map<std::string,std::pair<double,geometry_msgs::TwistStamped> > data;
-    double total_weight = 0;
-    for(auto itr = twist_weights_.begin(); itr != twist_weights_.end(); itr++)
-    {
-        geometry_msgs::TwistStamped twist;
-        if(buffer_manager_.queryData(stamp,itr->first,twist))
-        {
-            std::pair<double,geometry_msgs::TwistStamped> pair;
-            total_weight = total_weight + itr->second;
-            pair.first = itr->second;
-            pair.second = twist;
-            data[itr->first] = pair;
-        }
-    }
-    if(data.size() == 0)
-    {
-        return boost::none;
-    }
-    for(auto itr = data.begin(); itr != data.end(); itr++)
-    {
-        itr->second.first = itr->second.first/total_weight;
-    }
-    geometry_msgs::TwistStamped ret;
-    for(auto itr = data.begin(); itr != data.end(); itr++)
-    {
-        ret.twist.linear.x = ret.twist.linear.x + itr->second.second.twist.linear.x * itr->second.first;
-        ret.twist.linear.y = ret.twist.linear.y + itr->second.second.twist.linear.y * itr->second.first;
-        ret.twist.linear.z = ret.twist.linear.z + itr->second.second.twist.linear.z * itr->second.first;
-        ret.twist.angular.x = ret.twist.angular.x + itr->second.second.twist.angular.x * itr->second.first;
-        ret.twist.angular.y = ret.twist.angular.y + itr->second.second.twist.angular.y * itr->second.first;
-        ret.twist.angular.z = ret.twist.angular.z + itr->second.second.twist.angular.z * itr->second.first;
-    }
-    return ret;
-}
-
-boost::optional<geometry_msgs::PointStamped> ParticleFilter::estimatePoint(ros::Time stamp)
-{
-    std::map<std::string,std::pair<double,geometry_msgs::PointStamped> > data;
-    double total_weight = 0;
-    for(auto itr = point_weights_.begin(); itr != point_weights_.end(); itr++)
-    {
-        geometry_msgs::PointStamped point;
-        if(buffer_manager_.queryData(stamp,itr->first,point))
-        {
-            std::pair<double,geometry_msgs::PointStamped> pair;
-            total_weight = total_weight + itr->second;
-            pair.first = itr->second;
-            pair.second = point;
-            data[itr->first] = pair;
-        }
-    }
-    if(data.size() == 0)
-    {
-        return boost::none;
-    }
-    for(auto itr = data.begin(); itr != data.end(); itr++)
-    {
-        itr->second.first = itr->second.first/total_weight;
-    }
-    geometry_msgs::PointStamped ret;
-    for(auto itr = data.begin(); itr != data.end(); itr++)
-    {
-        ret.point.x = ret.point.x + itr->second.second.point.x * itr->second.first;
-        ret.point.y = ret.point.y + itr->second.second.point.y * itr->second.first;
-        ret.point.z = ret.point.z + itr->second.second.point.z * itr->second.first;
-    }
-    return ret;
+    return boost::none;
 }

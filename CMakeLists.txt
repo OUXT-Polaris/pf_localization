@@ -28,7 +28,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(pf_localization_node src/pf_localization_node.cpp src/pf_localization.cpp src/particle_filter.cpp src/buffer_manager.cpp)
+add_executable(pf_localization_node src/pf_localization_node.cpp src/pf_localization.cpp src/particle_filter.cpp)
 target_link_libraries(pf_localization_node ${catkin_LIBRARIES} glog)
 
 # install executables/libs
