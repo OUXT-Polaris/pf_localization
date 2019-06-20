@@ -15,6 +15,7 @@
         <param name="map_frame" value="$(arg map_frame)"/>
         <param name="initial_pose_topic" value="$(arg initial_pose_topic)"/>
         <param name="pose_topic" value="$(arg pose_topic)"/>
+        <param name="twist_topic" value="$(arg twist_topic)"/>
         <param name="estimate_3d_pose" value="$(arg estimate_3d_pose)"/>
         <param name="update_rate" value="$(arg update_rate)"/>
         <param name="num_particles" value="$(arg num_particles)"/>

@@ -4,7 +4,7 @@ PfLocalization::PfLocalization(ros::NodeHandle nh,ros::NodeHandle pnh) : nh_(nh)
 {
     pnh_.param<int>("num_particles", num_particles_, 100);
     pnh_.param<int>("update_rate", update_rate_, 20);
-    pnh_.param<std::string>("position_topic", pose_topic_, "/gps/fix/position");
+    pnh_.param<std::string>("pose_topic", pose_topic_, "/gps/fix/position");
     pnh_.param<std::string>("twist_topic", twist_topic_, "/twist");
     pnh_.param<std::string>("initial_pose_topic", initial_pose_topic_, "/initialpose");
     pnh_.param<std::string>("map_frame", map_frame_, "map");
