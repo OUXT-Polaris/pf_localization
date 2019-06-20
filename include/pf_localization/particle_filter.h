@@ -48,6 +48,7 @@ private:
     std::random_device seed_gen_;
     std::default_random_engine engine_;
     std::normal_distribution<> dist_;
+    std::normal_distribution<> rotation_dist_;
     std::mt19937 mt_;
     std::uniform_real_distribution<double> uniform_dist_;
     data_buffer::PoseStampedDataBuffer pose_buf_;

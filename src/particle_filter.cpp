@@ -4,7 +4,7 @@
 
 ParticleFilter::ParticleFilter(int num_particles,double buffer_length,bool estimate_3d_pose) 
     : num_particles(num_particles),buffer_length(buffer_length),estimate_3d_pose(estimate_3d_pose),
-    engine_(seed_gen_()),dist_(1.0,1.0),mt_(seed_gen_()),uniform_dist_(0.0,1.0),
+    engine_(seed_gen_()),dist_(1.0,0.1),rotation_dist_(1.0,/* 10000.0*/1.0),mt_(seed_gen_()),uniform_dist_(0.0,1.0),
     pose_buf_("/pose",buffer_length),twist_buf_("/twist",buffer_length)
 {
     particles_ = std::vector<Particle>(num_particles);
@@ -59,15 +59,15 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimateCurrentPose(
             geometry_msgs::Vector3 orientation;
             if(estimate_3d_pose)
             {
-                orientation.x = twist.twist.angular.x * duration * dist_(engine_);
-                orientation.y = twist.twist.angular.y * duration * dist_(engine_);
+                orientation.x = twist.twist.angular.x * duration * rotation_dist_(engine_);
+                orientation.y = twist.twist.angular.y * duration * rotation_dist_(engine_);
             }
             else
             {
                 orientation.x = 0.0;
                 orientation.y = 0.0;
             }
-            orientation.z = twist.twist.angular.z * duration * dist_(engine_);
+            orientation.z = twist.twist.angular.z * duration * rotation_dist_(engine_);
             geometry_msgs::Quaternion twist_angular_quat = 
                 quaternion_operation::convertEulerAngleToQuaternion(orientation);
             itr->pose.pose.orientation = quaternion_operation::rotation(itr->pose.pose.orientation,twist_angular_quat);
