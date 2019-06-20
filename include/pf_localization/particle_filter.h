@@ -35,6 +35,7 @@ public:
     boost::optional<geometry_msgs::PoseStamped> estimateCurrentPose(ros::Time stamp);
     void setInitialPose(geometry_msgs::PoseStamped pose);
     boost::optional<geometry_msgs::PoseStamped> getInitialPose();
+    std::vector<Particle> getParticles(){return particles_;};
 private:
     //data_buffer::BufferManager buffer_manager_;
     std::map<std::string,double> twist_weights_;

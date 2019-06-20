@@ -13,6 +13,7 @@
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_ros/transform_listener.h>
 #include <geometry_msgs/TransformStamped.h>
+#include <visualization_msgs/MarkerArray.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 // Headers in STL
@@ -58,6 +59,8 @@ private:
     void broadcastBaseLinkFrame(ros::Time stamp,geometry_msgs::PoseStamped pose);
     template <class C>
     boost::optional<C> transformToMapFrame(C input);
+    ros::Publisher marker_pub_;
+    bool publish_marker_;
 };
 
 #endif  //PF_LOCALIZATION_PF_LOCALIZATION_H_INCLUDED

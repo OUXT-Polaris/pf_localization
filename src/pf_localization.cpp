@@ -12,8 +12,13 @@ PfLocalization::PfLocalization(ros::NodeHandle nh,ros::NodeHandle pnh) : nh_(nh)
     pnh_.param<std::string>("base_link_frame", base_link_frame_, "base_link");
     pnh_.param<bool>("use_2d_pose_estimate",use_2d_pose_estimate_,false);
     pnh_.param<bool>("estimate_3d_pose",estimate_3d_pose_,false);
+    pnh_.param<bool>("estimate_3d_pose",publish_marker_,false);
     pf_ptr_ = std::make_shared<ParticleFilter>(num_particles_,10,estimate_3d_pose_);
     current_pose_pub_ = pnh_.advertise<geometry_msgs::PoseStamped>("current_pose",1);
+    if(publish_marker_)
+    {
+        marker_pub_ = pnh_.advertise<visualization_msgs::MarkerArray>("marker",1);
+    }
     if(use_2d_pose_estimate_)
     {
         initial_pose_sub_ = nh_.subscribe(initial_pose_topic_,1,&PfLocalization::initialPoseCallback,this);
@@ -48,6 +53,28 @@ void PfLocalization::updateCurrentPose()
         {
             broadcastBaseLinkFrame(now,*current_pose);
             current_pose_pub_.publish(*current_pose);
+        }
+        if(publish_marker_)
+        {
+            visualization_msgs::MarkerArray marker;
+            std::vector<Particle> particles = pf_ptr_->getParticles();
+            int id = 0;
+            for(auto itr = particles.begin(); itr != particles.end(); itr++)
+            {
+                visualization_msgs::Marker single_marker;
+                single_marker.header = itr->pose.header;
+                single_marker.pose = itr->pose.pose;
+                single_marker.type = single_marker.ARROW;
+                single_marker.id = id;
+                single_marker.color.r = 1.0-itr->weight;
+                single_marker.color.g = 0.0;
+                single_marker.color.b = itr->weight;
+                single_marker.color.a = 1.0;
+                single_marker.action = single_marker.ADD;
+                single_marker.frame_locked = true;
+                marker.markers.push_back(single_marker);
+                id++;
+            }
         }
         mtx_.unlock();
         rate.sleep();

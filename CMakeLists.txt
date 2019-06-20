@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_ros
   tf2_geometry_msgs
   geometry_msgs_data_buffer
+  visualization_msgs
 )
 
 find_package(Eigen3 REQUIRED)
@@ -18,7 +19,7 @@ find_package(Eigen3 REQUIRED)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES pf_localization
-  CATKIN_DEPENDS geometry_msgs quaternion_operation roscpp geometry_msgs_data_buffer
+  CATKIN_DEPENDS geometry_msgs quaternion_operation roscpp geometry_msgs_data_buffer visualization_msgs
 #  DEPENDS system_lib
 )
 
