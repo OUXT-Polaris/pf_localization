@@ -2,6 +2,7 @@
 
 PfLocalization::PfLocalization(ros::NodeHandle nh,ros::NodeHandle pnh) : nh_(nh),pnh_(pnh), tf_listener_(tf_buffer_)
 {
+    pose_recieved_ = false;
     pnh_.param<int>("num_particles", num_particles_, 100);
     pnh_.param<int>("update_rate", update_rate_, 20);
     pnh_.param<std::string>("pose_topic", pose_topic_, "/gps/fix/position");
@@ -79,6 +80,10 @@ void PfLocalization::twistStampedCallback(const geometry_msgs::TwistStamped::Con
 void PfLocalization::poseStampedCallback(const geometry_msgs::PoseStamped::ConstPtr msg)
 {
     mtx_.lock();
+    if(!pose_recieved_ && !use_2d_pose_estimate_)
+    {
+        pf_ptr_->setInitialPose(*msg);
+    }
     pf_ptr_->updatePose(*msg);
     mtx_.unlock();
     return;

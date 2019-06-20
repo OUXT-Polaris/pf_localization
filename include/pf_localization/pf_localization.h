@@ -52,6 +52,7 @@ private:
     tf2_ros::TransformBroadcaster tf_broadcaster_;
     tf2_ros::Buffer tf_buffer_;
     tf2_ros::TransformListener tf_listener_;
+    bool pose_recieved_;
     bool use_2d_pose_estimate_;
     bool estimate_3d_pose_;
     void broadcastBaseLinkFrame(ros::Time stamp,geometry_msgs::PoseStamped pose);

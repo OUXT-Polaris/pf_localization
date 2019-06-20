@@ -32,8 +32,6 @@ public:
     const bool estimate_3d_pose;
     void updateTwist(geometry_msgs::TwistStamped twist);
     void updatePose(geometry_msgs::PoseStamped pose);
-    //void updateTwist(std::string key,double weight,geometry_msgs::TwistStamped twist);
-    //void updatePoint(std::string key,double weight,geometry_msgs::PointStamped point);
     boost::optional<geometry_msgs::PoseStamped> estimateCurrentPose(ros::Time stamp);
     void setInitialPose(geometry_msgs::PoseStamped pose);
     boost::optional<geometry_msgs::PoseStamped> getInitialPose();
