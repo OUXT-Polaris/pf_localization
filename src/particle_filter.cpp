@@ -43,18 +43,14 @@ void ParticleFilter::setInitialPose(geometry_msgs::PoseStamped pose)
     }
     return;
 }
- 
-boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimatePose(ros::Time stamp)
-{
-    return boost::none;
-}
 
 boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimateCurrentPose(ros::Time stamp)
 {
-    /*
-    boost::optional<geometry_msgs::TwistStamped> twist = estimateTwist(stamp);
-    boost::optional<geometry_msgs::PointStamped> point = estimatePoint(stamp);
-    if(twist && point && current_pose_)
+    geometry_msgs::TwistStamped twist;
+    bool twist_query_succeed = twist_buf_.queryData(stamp,twist);
+    geometry_msgs::PoseStamped pose;
+    bool pose_query_succeed = pose_buf_.queryData(stamp,pose);
+    if(twist_query_succeed && pose_query_succeed && current_pose_)
     {
         double duration = (stamp - current_pose_->header.stamp).toSec();
         for(auto itr = particles_.begin(); itr != particles_.end(); itr++)
@@ -63,37 +59,45 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimateCurrentPose(
             geometry_msgs::Vector3 orientation;
             if(estimate_3d_pose)
             {
-                orientation.x = twist->twist.angular.x * duration * dist_(engine_);
-                orientation.y = twist->twist.angular.y * duration * dist_(engine_);
+                orientation.x = twist.twist.angular.x * duration * dist_(engine_);
+                orientation.y = twist.twist.angular.y * duration * dist_(engine_);
             }
             else
             {
                 orientation.x = 0.0;
                 orientation.y = 0.0;
             }
-            orientation.z = twist->twist.angular.z * duration * dist_(engine_);
+            orientation.z = twist.twist.angular.z * duration * dist_(engine_);
             geometry_msgs::Quaternion twist_angular_quat = 
                 quaternion_operation::convertEulerAngleToQuaternion(orientation);
             itr->pose.pose.orientation = quaternion_operation::rotation(itr->pose.pose.orientation,twist_angular_quat);
             if(estimate_3d_pose)
             {
-                itr->pose.pose.position.z = itr->pose.pose.position.z + twist->twist.linear.z * duration * dist_(engine_);
+                itr->pose.pose.position.z = itr->pose.pose.position.z + twist.twist.linear.z * duration * dist_(engine_);
             }
             else
             {
                 itr->pose.pose.position.z = 0;
             }
-            itr->pose.pose.position.x = itr->pose.pose.position.x + twist->twist.linear.x * duration * dist_(engine_);
-            itr->pose.pose.position.y = itr->pose.pose.position.y + twist->twist.linear.y * duration * dist_(engine_);
+            itr->pose.pose.position.x = itr->pose.pose.position.x + twist.twist.linear.x * duration * dist_(engine_);
+            itr->pose.pose.position.y = itr->pose.pose.position.y + twist.twist.linear.y * duration * dist_(engine_);
             // Evaluate
-            double dist = std::sqrt(std::pow(itr->pose.pose.position.x-point->point.x,2)
-                + std::pow(itr->pose.pose.position.y-point->point.y,2)
-                + std::pow(itr->pose.pose.position.z-point->point.z,2));
+            double dist = std::sqrt(std::pow(itr->pose.pose.position.x-pose.pose.position.x,2)
+                + std::pow(itr->pose.pose.position.y-pose.pose.position.y,2)
+                + std::pow(itr->pose.pose.position.z-pose.pose.position.z,2));
+            geometry_msgs::Quaternion diff_quat = quaternion_operation::getRotation(itr->pose.pose.orientation,pose.pose.orientation);
+            geometry_msgs::Vector3 diff_vec = quaternion_operation::convertQuaternionToEulerAngle(diff_quat);
+            double diff_angle = std::sqrt(diff_vec.x*diff_vec.x + diff_vec.y*diff_vec.y + diff_vec.z*diff_vec.z);
+            // avoid zero diveide
             if(dist < 0.0001)
             {
                 dist = 0.0001;
             }
-            itr->weight = 1/dist;
+            if(diff_angle < 0.0001)
+            {
+                diff_angle = 0.0001;
+            }
+            itr->weight = 1/(dist*diff_angle);
         }
         double total_weight = 0.0;
         double heighest_weight = 0;
@@ -130,11 +134,5 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimateCurrentPose(
         current_pose_ = ret;
         return ret;
     }
-    */
-    return boost::none;
-}
-
-boost::optional<geometry_msgs::TwistStamped> ParticleFilter::estimateTwist(ros::Time stamp)
-{
     return boost::none;
 }

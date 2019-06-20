@@ -7,6 +7,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs_data_buffer/pose_stamped_data_buffer.h>
 #include <geometry_msgs_data_buffer/twist_stamped_data_buffer.h>
+#include <quaternion_operation/quaternion_operation.h>
 
 //headers in Boost
 #include <boost/optional.hpp>
