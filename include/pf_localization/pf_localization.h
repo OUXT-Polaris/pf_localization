@@ -53,10 +53,12 @@ private:
     bool pose_recieved_;
     bool estimate_3d_pose_;
     void broadcastBaseLinkFrame(ros::Time stamp,geometry_msgs::PoseStamped pose);
+    void broadcastInitialPositionFrame(ros::Time stamp);
     template <class C>
     boost::optional<C> transformToMapFrame(C input);
     ros::Publisher marker_pub_;
     bool publish_marker_;
+    geometry_msgs::PoseStamped initial_pose_;
 };
 
 #endif  //PF_LOCALIZATION_PF_LOCALIZATION_H_INCLUDED

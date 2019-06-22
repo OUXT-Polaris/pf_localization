@@ -42,6 +42,7 @@ void PfLocalization::updateCurrentPose()
         boost::optional<geometry_msgs::PoseStamped> current_pose = pf_ptr_->estimateCurrentPose(now);
         if(current_pose)
         {
+            broadcastInitialPositionFrame(now);
             broadcastBaseLinkFrame(now,*current_pose);
             current_pose_pub_.publish(*current_pose);
         }
@@ -92,6 +93,23 @@ void PfLocalization::broadcastBaseLinkFrame(ros::Time stamp,geometry_msgs::PoseS
     return;
 }
 
+void PfLocalization::broadcastInitialPositionFrame(ros::Time stamp)
+{
+    geometry_msgs::TransformStamped transform_stamped;
+    transform_stamped.header.frame_id = map_frame_;
+    transform_stamped.header.stamp = stamp;
+    transform_stamped.child_frame_id = "initial_position";
+    transform_stamped.transform.translation.x = initial_pose_.pose.position.x;
+    transform_stamped.transform.translation.y = initial_pose_.pose.position.y;
+    transform_stamped.transform.translation.z = initial_pose_.pose.position.z;
+    transform_stamped.transform.rotation.x = 0.0;
+    transform_stamped.transform.rotation.y = 0.0;
+    transform_stamped.transform.rotation.z = 0.0;
+    transform_stamped.transform.rotation.w = 1.0;
+    tf_broadcaster_.sendTransform(transform_stamped);
+    return;
+}
+
 void PfLocalization::twistStampedCallback(const geometry_msgs::TwistStamped::ConstPtr msg)
 {
     mtx_.lock();
@@ -105,6 +123,7 @@ void PfLocalization::poseStampedCallback(const geometry_msgs::PoseStamped::Const
     mtx_.lock();
     if(!pose_recieved_)
     {
+        initial_pose_ = *msg;
         pf_ptr_->setInitialPose(*msg);
     }
     pf_ptr_->updatePose(*msg);
