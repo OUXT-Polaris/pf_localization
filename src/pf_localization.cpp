@@ -7,10 +7,8 @@ PfLocalization::PfLocalization(ros::NodeHandle nh,ros::NodeHandle pnh) : nh_(nh)
     pnh_.param<int>("update_rate", update_rate_, 20);
     pnh_.param<std::string>("pose_topic", pose_topic_, "/gps/fix/position");
     pnh_.param<std::string>("twist_topic", twist_topic_, "/twist");
-    pnh_.param<std::string>("initial_pose_topic", initial_pose_topic_, "/initialpose");
     pnh_.param<std::string>("map_frame", map_frame_, "map");
     pnh_.param<std::string>("base_link_frame", base_link_frame_, "base_link");
-    pnh_.param<bool>("use_2d_pose_estimate",use_2d_pose_estimate_,false);
     pnh_.param<bool>("estimate_3d_pose",estimate_3d_pose_,false);
     pnh_.param<bool>("publish_marker",publish_marker_,false);
     pf_ptr_ = std::make_shared<ParticleFilter>(num_particles_,10,estimate_3d_pose_);
@@ -19,15 +17,8 @@ PfLocalization::PfLocalization(ros::NodeHandle nh,ros::NodeHandle pnh) : nh_(nh)
     {
         marker_pub_ = pnh_.advertise<visualization_msgs::MarkerArray>("marker",1);
     }
-    if(use_2d_pose_estimate_)
-    {
-        initial_pose_sub_ = nh_.subscribe(initial_pose_topic_,1,&PfLocalization::initialPoseCallback,this);
-    }
-    else
-    {
-        twist_sub_ = nh_.subscribe(twist_topic_,1,&PfLocalization::twistStampedCallback,this);
-        pose_sub_ = nh_.subscribe(pose_topic_,1,&PfLocalization::poseStampedCallback,this);
-    }
+    twist_sub_ = nh_.subscribe(twist_topic_,1,&PfLocalization::twistStampedCallback,this);
+    pose_sub_ = nh_.subscribe(pose_topic_,1,&PfLocalization::poseStampedCallback,this);
 }
 
 PfLocalization::~PfLocalization()
@@ -112,7 +103,7 @@ void PfLocalization::twistStampedCallback(const geometry_msgs::TwistStamped::Con
 void PfLocalization::poseStampedCallback(const geometry_msgs::PoseStamped::ConstPtr msg)
 {
     mtx_.lock();
-    if(!pose_recieved_ && !use_2d_pose_estimate_)
+    if(!pose_recieved_)
     {
         pf_ptr_->setInitialPose(*msg);
     }
@@ -139,26 +130,4 @@ boost::optional<C> PfLocalization::transformToMapFrame(C input)
         tf2::doTransform(input,input,transform_stamped);
     }
     return input;
-}
-
-void PfLocalization::initialPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr msg)
-{
-    geometry_msgs::PoseStamped pose;
-    pose.header = msg->header;
-    pose.pose = msg->pose.pose;
-    while(ros::ok())
-    {
-        ros::Rate rate(10);
-        boost::optional<geometry_msgs::PoseStamped> pose_transformed = transformToMapFrame(pose);
-        if(pose_transformed)
-        {
-            pf_ptr_->setInitialPose(*pose_transformed);
-            broadcastBaseLinkFrame(ros::Time::now(),*pose_transformed);
-            break;
-        }
-        rate.sleep();
-    }
-    twist_sub_ = nh_.subscribe(twist_topic_,1,&PfLocalization::twistStampedCallback,this);
-    pose_sub_ = nh_.subscribe(pose_topic_,1,&PfLocalization::poseStampedCallback,this);
-    return;
 }

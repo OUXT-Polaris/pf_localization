@@ -13,6 +13,7 @@
 #include <boost/optional.hpp>
 
 //headers in STL
+#include <float.h>
 #include <map>
 #include <random>
 
@@ -37,6 +38,7 @@ public:
     boost::optional<geometry_msgs::PoseStamped> getInitialPose();
     std::vector<Particle> getParticles(){return particles_;};
 private:
+    bool checkQuaternion(geometry_msgs::Quaternion quat);
     //data_buffer::BufferManager buffer_manager_;
     std::map<std::string,double> twist_weights_;
     std::map<std::string,double> point_weights_;

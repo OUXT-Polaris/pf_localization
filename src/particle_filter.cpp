@@ -44,6 +44,17 @@ void ParticleFilter::setInitialPose(geometry_msgs::PoseStamped pose)
     return;
 }
 
+bool ParticleFilter::checkQuaternion(geometry_msgs::Quaternion quat)
+{
+    double a = std::sqrt(std::pow(quat.x,2) + std::pow(quat.y,2) + std::pow(quat.z,2) + std::pow(quat.w,2));
+    double b = 1.0;
+    if (fabs(a - b) < DBL_EPSILON)
+    {
+        return true;
+    }
+    return false;
+}
+
 boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimateCurrentPose(ros::Time stamp)
 {
     geometry_msgs::TwistStamped twist;

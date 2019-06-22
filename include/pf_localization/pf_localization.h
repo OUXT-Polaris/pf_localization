@@ -34,7 +34,6 @@ private:
     void updateCurrentPose();
     void twistStampedCallback(const geometry_msgs::TwistStamped::ConstPtr msg);
     void poseStampedCallback(const geometry_msgs::PoseStamped::ConstPtr msg);
-    void initialPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr msg);
     std::mutex mtx_;
     std::shared_ptr<ParticleFilter> pf_ptr_;
     int num_particles_;
@@ -42,19 +41,16 @@ private:
     ros::NodeHandle pnh_;
     std::string pose_topic_;
     std::string twist_topic_;
-    std::string initial_pose_topic_;
     std::string map_frame_;
     std::string base_link_frame_;
     int update_rate_;
     ros::Publisher current_pose_pub_;
     ros::Subscriber twist_sub_;
     ros::Subscriber pose_sub_;
-    ros::Subscriber initial_pose_sub_;
     tf2_ros::TransformBroadcaster tf_broadcaster_;
     tf2_ros::Buffer tf_buffer_;
     tf2_ros::TransformListener tf_listener_;
     bool pose_recieved_;
-    bool use_2d_pose_estimate_;
     bool estimate_3d_pose_;
     void broadcastBaseLinkFrame(ros::Time stamp,geometry_msgs::PoseStamped pose);
     template <class C>
