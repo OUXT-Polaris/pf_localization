@@ -12,6 +12,7 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_ros/transform_listener.h>
+#include <tf2_ros/static_transform_broadcaster.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
@@ -48,6 +49,7 @@ private:
     ros::Subscriber twist_sub_;
     ros::Subscriber pose_sub_;
     tf2_ros::TransformBroadcaster tf_broadcaster_;
+    tf2_ros::StaticTransformBroadcaster static_tf_broadcaster_;
     tf2_ros::Buffer tf_buffer_;
     tf2_ros::TransformListener tf_listener_;
     bool pose_recieved_;

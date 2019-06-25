@@ -97,7 +97,7 @@ void PfLocalization::broadcastInitialPositionFrame(ros::Time stamp)
 {
     geometry_msgs::TransformStamped transform_stamped;
     transform_stamped.header.frame_id = map_frame_;
-    transform_stamped.header.stamp = stamp;
+    //transform_stamped.header.stamp = stamp;
     transform_stamped.child_frame_id = "initial_position";
     transform_stamped.transform.translation.x = initial_pose_.pose.position.x;
     transform_stamped.transform.translation.y = initial_pose_.pose.position.y;
@@ -106,7 +106,7 @@ void PfLocalization::broadcastInitialPositionFrame(ros::Time stamp)
     transform_stamped.transform.rotation.y = 0.0;
     transform_stamped.transform.rotation.z = 0.0;
     transform_stamped.transform.rotation.w = 1.0;
-    tf_broadcaster_.sendTransform(transform_stamped);
+    static_tf_broadcaster_.sendTransform(transform_stamped);
     return;
 }
 
@@ -125,6 +125,7 @@ void PfLocalization::poseStampedCallback(const geometry_msgs::PoseStamped::Const
     {
         initial_pose_ = *msg;
         pf_ptr_->setInitialPose(*msg);
+        pose_recieved_ = true;
     }
     pf_ptr_->updatePose(*msg);
     mtx_.unlock();
