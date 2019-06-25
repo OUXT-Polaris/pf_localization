@@ -55,9 +55,10 @@ private:
     bool pose_recieved_;
     bool estimate_3d_pose_;
     void broadcastBaseLinkFrame(ros::Time stamp,geometry_msgs::PoseStamped pose);
-    void broadcastInitialPositionFrame(ros::Time stamp);
+    void broadcastInitialPoseFrame(ros::Time stamp);
     template <class C>
     boost::optional<C> transformToMapFrame(C input);
+    ros::Publisher current_twist_pub_;
     ros::Publisher marker_pub_;
     bool publish_marker_;
     geometry_msgs::PoseStamped initial_pose_;

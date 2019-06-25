@@ -11,8 +11,9 @@ PfLocalization::PfLocalization(ros::NodeHandle nh,ros::NodeHandle pnh) : nh_(nh)
     pnh_.param<std::string>("base_link_frame", base_link_frame_, "base_link");
     pnh_.param<bool>("estimate_3d_pose",estimate_3d_pose_,false);
     pnh_.param<bool>("publish_marker",publish_marker_,false);
-    pf_ptr_ = std::make_shared<ParticleFilter>(num_particles_,10,estimate_3d_pose_);
+    pf_ptr_ = std::make_shared<ParticleFilter>(num_particles_,1,estimate_3d_pose_);
     current_pose_pub_ = pnh_.advertise<geometry_msgs::PoseStamped>("current_pose",1);
+    current_twist_pub_ = pnh_.advertise<geometry_msgs::PoseStamped>("current_twist",1);
     if(publish_marker_)
     {
         marker_pub_ = pnh_.advertise<visualization_msgs::MarkerArray>("marker",1);
@@ -42,7 +43,7 @@ void PfLocalization::updateCurrentPose()
         boost::optional<geometry_msgs::PoseStamped> current_pose = pf_ptr_->estimateCurrentPose(now);
         if(current_pose)
         {
-            broadcastInitialPositionFrame(now);
+            broadcastInitialPoseFrame(now);
             broadcastBaseLinkFrame(now,*current_pose);
             current_pose_pub_.publish(*current_pose);
         }
@@ -93,19 +94,19 @@ void PfLocalization::broadcastBaseLinkFrame(ros::Time stamp,geometry_msgs::PoseS
     return;
 }
 
-void PfLocalization::broadcastInitialPositionFrame(ros::Time stamp)
+void PfLocalization::broadcastInitialPoseFrame(ros::Time stamp)
 {
     geometry_msgs::TransformStamped transform_stamped;
     transform_stamped.header.frame_id = map_frame_;
     //transform_stamped.header.stamp = stamp;
-    transform_stamped.child_frame_id = "initial_position";
+    transform_stamped.child_frame_id = "initial_pose";
     transform_stamped.transform.translation.x = initial_pose_.pose.position.x;
     transform_stamped.transform.translation.y = initial_pose_.pose.position.y;
     transform_stamped.transform.translation.z = initial_pose_.pose.position.z;
-    transform_stamped.transform.rotation.x = 0.0;
-    transform_stamped.transform.rotation.y = 0.0;
-    transform_stamped.transform.rotation.z = 0.0;
-    transform_stamped.transform.rotation.w = 1.0;
+    transform_stamped.transform.rotation.x = initial_pose_.pose.orientation.x;
+    transform_stamped.transform.rotation.y = initial_pose_.pose.orientation.y;
+    transform_stamped.transform.rotation.z = initial_pose_.pose.orientation.z;
+    transform_stamped.transform.rotation.w = initial_pose_.pose.orientation.w;
     static_tf_broadcaster_.sendTransform(transform_stamped);
     return;
 }

@@ -37,6 +37,7 @@ public:
     void setInitialPose(geometry_msgs::PoseStamped pose);
     boost::optional<geometry_msgs::PoseStamped> getInitialPose();
     std::vector<Particle> getParticles(){return particles_;};
+    void reset(geometry_msgs::PoseStamped pose);
 private:
     bool checkQuaternion(geometry_msgs::Quaternion quat);
     //data_buffer::BufferManager buffer_manager_;
@@ -49,7 +50,7 @@ private:
     boost::optional<geometry_msgs::PoseStamped> initial_pose_;
     std::random_device seed_gen_;
     std::default_random_engine engine_;
-    std::normal_distribution<> dist_;
+    std::normal_distribution<> position_dist_;
     std::normal_distribution<> rotation_dist_;
     std::mt19937 mt_;
     std::uniform_real_distribution<double> uniform_dist_;
