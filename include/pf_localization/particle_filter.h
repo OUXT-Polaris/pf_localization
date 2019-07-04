@@ -42,6 +42,8 @@ public:
     boost::optional<geometry_msgs::PoseStamped> getInitialPose();
     std::vector<Particle> getParticles(){return particles_;};
 private:
+    double getEffectiveSampleSize();
+    void normalizeWeights();
     void expansionReset();
     bool checkQuaternion(geometry_msgs::Quaternion quat);
     std::map<std::string,double> twist_weights_;

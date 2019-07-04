@@ -9,7 +9,7 @@
     <arg name="num_particles" default="100"/>
     <arg name="publish_marker" default="true"/>
     <arg name="respawn" default="false"/>
-    <arg name="reset_ess_threashold" default="0.5"/>
+    <arg name="reset_ess_threashold" default="3"/>
     <arg name="max_expantion_orientation" default="0.3"/>
     <arg name="max_expantion_position" default="0.5"/>
 

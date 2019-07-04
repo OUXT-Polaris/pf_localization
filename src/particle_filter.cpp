@@ -6,7 +6,7 @@ ParticleFilter::ParticleFilter(int num_particles,double buffer_length,bool estim
     double reset_ess_threashold,double max_expansion_orientation,double max_expantion_position) 
     : num_particles(num_particles),buffer_length(buffer_length),estimate_3d_pose(estimate_3d_pose),reset_ess_threashold(reset_ess_threashold),
      max_expansion_orientation(max_expansion_orientation),max_expantion_position(max_expantion_position),
-    engine_(seed_gen_()),position_dist_(1.0,10.0),rotation_dist_(1.0,1.0),mt_(seed_gen_()),uniform_dist_(0.0,1.0),
+    engine_(seed_gen_()),position_dist_(1.0,1.0),rotation_dist_(1.0,1.0),mt_(seed_gen_()),uniform_dist_(0.0,1.0),
     pose_buf_("/pose",buffer_length),twist_buf_("/twist",buffer_length)
 {
     particles_ = std::vector<Particle>(num_particles);
@@ -40,7 +40,7 @@ void ParticleFilter::setInitialPose(geometry_msgs::PoseStamped pose)
     initial_pose_ = pose;
     for(auto itr = particles_.begin(); itr != particles_.end(); itr++)
     {
-        itr->weight = (double)1.0/num_particles;
+        itr->weight = (double)1.0/(double)num_particles;
         itr->pose = pose;
     }
     return;
@@ -79,6 +79,7 @@ void ParticleFilter::expansionReset()
         itr->pose.pose.position.x = itr->pose.pose.position.x + rand_xyz.x;
         itr->pose.pose.position.y = itr->pose.pose.position.y + rand_xyz.y;
         itr->pose.pose.position.z = itr->pose.pose.position.z + rand_xyz.z;
+        itr->weight = (double)1.0/(double)num_particles;
     }
     return;
 }
@@ -92,6 +93,29 @@ bool ParticleFilter::checkQuaternion(geometry_msgs::Quaternion quat)
         return true;
     }
     return false;
+}
+
+void ParticleFilter::normalizeWeights()
+{
+    double sum_weights = 0.0;
+    for(auto itr = particles_.begin(); itr != particles_.end(); itr++)
+    {
+        sum_weights = sum_weights + itr->weight;
+    }
+    for(auto itr = particles_.begin(); itr != particles_.end(); itr++)
+    {
+        itr->weight = itr->weight/sum_weights;
+    }
+}
+
+double ParticleFilter::getEffectiveSampleSize()
+{
+    double squared_sum = 0.0;
+    for(auto itr = particles_.begin(); itr != particles_.end(); itr++)
+    {
+        squared_sum = squared_sum + (itr->weight*itr->weight);
+    }
+    return 1/squared_sum;
 }
 
 boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimateCurrentPose(ros::Time stamp)
@@ -192,6 +216,12 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimateCurrentPose(
         particles_ = new_particles;
         ret.header.stamp = stamp;
         current_pose_ = ret;
+        normalizeWeights();
+        double ess = getEffectiveSampleSize();
+        if(ess < reset_ess_threashold)
+        {
+            expansionReset();
+        }
         return ret;
     }
     return boost::none;
