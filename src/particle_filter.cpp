@@ -2,8 +2,10 @@
 
 #include <quaternion_operation/quaternion_operation.h>
 
-ParticleFilter::ParticleFilter(int num_particles,double buffer_length,bool estimate_3d_pose) 
-    : num_particles(num_particles),buffer_length(buffer_length),estimate_3d_pose(estimate_3d_pose),
+ParticleFilter::ParticleFilter(int num_particles,double buffer_length,bool estimate_3d_pose,
+    double reset_ess_threashold,double max_expansion_orientation,double max_expantion_position) 
+    : num_particles(num_particles),buffer_length(buffer_length),estimate_3d_pose(estimate_3d_pose),reset_ess_threashold(reset_ess_threashold),
+     max_expansion_orientation(max_expansion_orientation),max_expantion_position(max_expantion_position),
     engine_(seed_gen_()),position_dist_(1.0,10.0),rotation_dist_(1.0,1.0),mt_(seed_gen_()),uniform_dist_(0.0,1.0),
     pose_buf_("/pose",buffer_length),twist_buf_("/twist",buffer_length)
 {
@@ -44,10 +46,41 @@ void ParticleFilter::setInitialPose(geometry_msgs::PoseStamped pose)
     return;
 }
 
-void ParticleFilter::reset(geometry_msgs::PoseStamped pose)
+void ParticleFilter::expansionReset()
 {
-    std::normal_distribution<> initial_position_dist(0.0,0.1);
-    std::normal_distribution<> initial_rotation_dist(0.0,0.1);
+    ROS_INFO_STREAM("execute expansion reset");
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_real_distribution<double> rand(-1.0,1.0);
+    for(auto itr = particles_.begin(); itr != particles_.end(); itr++)
+    {
+        geometry_msgs::Vector3 rand_rpy;
+        geometry_msgs::Point rand_xyz;
+        if(estimate_3d_pose)
+        {
+            rand_rpy.x = rand(mt)*max_expansion_orientation;
+            rand_rpy.y = rand(mt)*max_expansion_orientation;
+            rand_rpy.z = rand(mt)*max_expansion_orientation;
+            rand_xyz.x = rand(mt)*max_expantion_position;
+            rand_xyz.y = rand(mt)*max_expantion_position;
+            rand_xyz.z = rand(mt)*max_expantion_position;
+        }
+        else
+        {
+            rand_rpy.x = 0;
+            rand_rpy.y = 0;
+            rand_rpy.z = rand(mt)*max_expansion_orientation;
+            rand_xyz.x = rand(mt)*max_expantion_position;
+            rand_xyz.y = rand(mt)*max_expantion_position;
+            rand_xyz.z = 0;
+        }
+        geometry_msgs::Quaternion rand_quat = quaternion_operation::convertEulerAngleToQuaternion(rand_rpy);
+        itr->pose.pose.orientation = itr->pose.pose.orientation*rand_quat;
+        itr->pose.pose.position.x = itr->pose.pose.position.x + rand_xyz.x;
+        itr->pose.pose.position.y = itr->pose.pose.position.y + rand_xyz.y;
+        itr->pose.pose.position.z = itr->pose.pose.position.z + rand_xyz.z;
+    }
+    return;
 }
 
 bool ParticleFilter::checkQuaternion(geometry_msgs::Quaternion quat)

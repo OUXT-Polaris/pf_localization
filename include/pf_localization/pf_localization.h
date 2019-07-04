@@ -54,6 +54,9 @@ private:
     tf2_ros::TransformListener tf_listener_;
     bool pose_recieved_;
     bool estimate_3d_pose_;
+    double reset_ess_threashold_;
+    double max_expantion_orientation_;
+    double max_expantion_position_;
     void broadcastBaseLinkFrame(ros::Time stamp,geometry_msgs::PoseStamped pose);
     void broadcastInitialPoseFrame(ros::Time stamp);
     template <class C>

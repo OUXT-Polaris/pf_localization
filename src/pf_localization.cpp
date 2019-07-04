@@ -11,7 +11,11 @@ PfLocalization::PfLocalization(ros::NodeHandle nh,ros::NodeHandle pnh) : nh_(nh)
     pnh_.param<std::string>("base_link_frame", base_link_frame_, "base_link");
     pnh_.param<bool>("estimate_3d_pose",estimate_3d_pose_,false);
     pnh_.param<bool>("publish_marker",publish_marker_,false);
-    pf_ptr_ = std::make_shared<ParticleFilter>(num_particles_,1,estimate_3d_pose_);
+    pnh_.param<double>("reset_ess_threashold",reset_ess_threashold_,0.5);
+    pnh_.param<double>("max_expantion_orientation",max_expantion_orientation_,0.5);
+    pnh_.param<double>("max_expantion_position",max_expantion_position_,0.5);
+    pf_ptr_ = std::make_shared<ParticleFilter>(num_particles_,1,estimate_3d_pose_,
+        reset_ess_threashold_,max_expantion_orientation_,max_expantion_position_);
     current_pose_pub_ = pnh_.advertise<geometry_msgs::PoseStamped>("current_pose",1);
     current_twist_pub_ = pnh_.advertise<geometry_msgs::PoseStamped>("current_twist",1);
     if(publish_marker_)
