@@ -12,11 +12,14 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_ros/transform_listener.h>
+#include <tf2_ros/static_transform_broadcaster.h>
 #include <geometry_msgs/TransformStamped.h>
+#include <visualization_msgs/MarkerArray.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 // Headers in STL
 #include <memory>
+#include <mutex>
 
 // Headers in Boost
 #include <boost/optional.hpp>
@@ -31,29 +34,34 @@ public:
 private:
     void updateCurrentPose();
     void twistStampedCallback(const geometry_msgs::TwistStamped::ConstPtr msg);
-    void pointStampedCallback(const geometry_msgs::PointStamped::ConstPtr msg);
-    void initialPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr msg);
+    void poseStampedCallback(const geometry_msgs::PoseStamped::ConstPtr msg);
+    std::mutex mtx_;
     std::shared_ptr<ParticleFilter> pf_ptr_;
     int num_particles_;
     ros::NodeHandle nh_;
     ros::NodeHandle pnh_;
-    std::string position_topic_;
+    std::string pose_topic_;
     std::string twist_topic_;
-    std::string initial_pose_topic_;
     std::string map_frame_;
     std::string base_link_frame_;
     int update_rate_;
     ros::Publisher current_pose_pub_;
     ros::Subscriber twist_sub_;
-    ros::Subscriber point_sub_;
-    ros::Subscriber initial_pose_sub_;
+    ros::Subscriber pose_sub_;
     tf2_ros::TransformBroadcaster tf_broadcaster_;
+    tf2_ros::StaticTransformBroadcaster static_tf_broadcaster_;
     tf2_ros::Buffer tf_buffer_;
     tf2_ros::TransformListener tf_listener_;
-    bool use_2d_pose_estimate_;
+    bool pose_recieved_;
+    bool estimate_3d_pose_;
     void broadcastBaseLinkFrame(ros::Time stamp,geometry_msgs::PoseStamped pose);
+    void broadcastInitialPoseFrame(ros::Time stamp);
     template <class C>
     boost::optional<C> transformToMapFrame(C input);
+    ros::Publisher current_twist_pub_;
+    ros::Publisher marker_pub_;
+    bool publish_marker_;
+    geometry_msgs::PoseStamped initial_pose_;
 };
 
 #endif  //PF_LOCALIZATION_PF_LOCALIZATION_H_INCLUDED

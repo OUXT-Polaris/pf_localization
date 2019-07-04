@@ -1,12 +1,23 @@
 <?xml version="1.0"?>
 <launch>
-    <arg name="parameter_yaml_path" default="$(find pf_localization)/config/default.yaml"/>
-    <node pkg="pf_localization" type="pf_localization_node" name="pf_localization_node" output="log" respawn="false" respawn_delay="0">
-        <rosparam file="$(arg parameter_yaml_path)" command="load"/>
-    </node>
+    <arg name="base_link_frame" default="base_link"/>
+    <arg name="map_frame" default="map"/>
+    <arg name="twist_topic" default="/twist"/>
+    <arg name="pose_topic" default="/pose"/>
+    <arg name="estimate_3d_pose" default="false"/>
+    <arg name="update_rate" default="30"/>
+    <arg name="num_particles" default="100"/>
+    <arg name="publish_marker" default="true"/>
+    <arg name="respawn" default="false"/>
 
-    <arg name="initial_pose_yaml_path" default="$(find pf_localization)/config/initial_pose_setter.yaml"/>
-    <node pkg="pf_localization" type="initial_pose_setter.py" name="initial_pose_setter" output="log" respawn="false" respawn_delay="0">
-        <rosparam file="$(arg initial_pose_yaml_path)" command="load"/>
+    <node pkg="pf_localization" type="pf_localization_node" name="pf_localization_node" output="screen" respawn="$(arg respawn)" respawn_delay="0">
+        <param name="base_link_frame" value="$(arg base_link_frame)"/>
+        <param name="map_frame" value="$(arg map_frame)"/>
+        <param name="pose_topic" value="$(arg pose_topic)"/>
+        <param name="twist_topic" value="$(arg twist_topic)"/>
+        <param name="estimate_3d_pose" value="$(arg estimate_3d_pose)"/>
+        <param name="update_rate" value="$(arg update_rate)"/>
+        <param name="num_particles" value="$(arg num_particles)"/>
+        <param name="publish_marker" value="$(arg publish_marker)"/>
     </node>
 </launch>

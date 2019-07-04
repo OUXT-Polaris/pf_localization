@@ -2,9 +2,10 @@
 
 #include <quaternion_operation/quaternion_operation.h>
 
-ParticleFilter::ParticleFilter(int num_particles,double buffer_length) 
-    : num_particles(num_particles),buffer_length(buffer_length),buf_(buffer_length),
-    engine_(seed_gen_()),dist_(1.0,0.01),mt_(seed_gen_()),uniform_dist_(0.0,1.0)
+ParticleFilter::ParticleFilter(int num_particles,double buffer_length,bool estimate_3d_pose) 
+    : num_particles(num_particles),buffer_length(buffer_length),estimate_3d_pose(estimate_3d_pose),
+    engine_(seed_gen_()),position_dist_(1.0,10.0),rotation_dist_(1.0,1.0),mt_(seed_gen_()),uniform_dist_(0.0,1.0),
+    pose_buf_("/pose",buffer_length),twist_buf_("/twist",buffer_length)
 {
     particles_ = std::vector<Particle>(num_particles);
     current_pose_ = boost::none;
@@ -21,18 +22,14 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::getInitialPose()
     return initial_pose_;
 }
 
-void ParticleFilter::updateTwist(std::string key,double weight,geometry_msgs::TwistStamped twist)
+void ParticleFilter::updateTwist(geometry_msgs::TwistStamped twist)
 {
-    buf_.addData(key,twist);
-    twist_weights_[key] = weight;
-    return;
+    twist_buf_.addData(twist);
 }
 
-void ParticleFilter::updatePoint(std::string key,double weight,geometry_msgs::PointStamped point)
+void ParticleFilter::updatePose(geometry_msgs::PoseStamped pose)
 {
-    buf_.addData(key,point);
-    point_weights_[key] = weight;
-    return;
+    pose_buf_.addData(pose);
 }
 
 void ParticleFilter::setInitialPose(geometry_msgs::PoseStamped pose)
@@ -47,43 +44,94 @@ void ParticleFilter::setInitialPose(geometry_msgs::PoseStamped pose)
     return;
 }
 
-boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimatePose(ros::Time stamp)
+void ParticleFilter::reset(geometry_msgs::PoseStamped pose)
 {
-    boost::optional<geometry_msgs::TwistStamped> twist = estimateTwist(stamp);
-    boost::optional<geometry_msgs::PointStamped> point = estimatePoint(stamp);
-    if(twist && point && current_pose_)
+    std::normal_distribution<> initial_position_dist(0.0,0.1);
+    std::normal_distribution<> initial_rotation_dist(0.0,0.1);
+}
+
+bool ParticleFilter::checkQuaternion(geometry_msgs::Quaternion quat)
+{
+    double a = std::sqrt(std::pow(quat.x,2) + std::pow(quat.y,2) + std::pow(quat.z,2) + std::pow(quat.w,2));
+    double b = 1.0;
+    if (fabs(a - b) < DBL_EPSILON)
+    {
+        return true;
+    }
+    return false;
+}
+
+boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimateCurrentPose(ros::Time stamp)
+{
+    geometry_msgs::TwistStamped twist;
+    bool twist_query_succeed = twist_buf_.queryData(stamp,twist);
+    geometry_msgs::PoseStamped pose;
+    bool pose_query_succeed = pose_buf_.queryData(stamp,pose);
+    if(twist_query_succeed && pose_query_succeed && current_pose_)
     {
         double duration = (stamp - current_pose_->header.stamp).toSec();
         for(auto itr = particles_.begin(); itr != particles_.end(); itr++)
         {
             // Transition
             geometry_msgs::Vector3 orientation;
-            orientation.x = twist->twist.angular.x * duration * dist_(engine_);
-            orientation.y = twist->twist.angular.y * duration * dist_(engine_);
-            orientation.z = twist->twist.angular.z * duration * dist_(engine_);
+            if(estimate_3d_pose)
+            {
+                orientation.x = twist.twist.angular.x * duration * rotation_dist_(engine_);
+                orientation.y = twist.twist.angular.y * duration * rotation_dist_(engine_);
+            }
+            else
+            {
+                orientation.x = 0.0;
+                orientation.y = 0.0;
+            }
+            orientation.z = twist.twist.angular.z * duration * rotation_dist_(engine_);
             geometry_msgs::Quaternion twist_angular_quat = 
                 quaternion_operation::convertEulerAngleToQuaternion(orientation);
             itr->pose.pose.orientation = quaternion_operation::rotation(itr->pose.pose.orientation,twist_angular_quat);
-            itr->pose.pose.position.x = itr->pose.pose.position.x + twist->twist.linear.x * duration * dist_(engine_);
-            itr->pose.pose.position.y = itr->pose.pose.position.y + twist->twist.linear.y * duration * dist_(engine_);
-            itr->pose.pose.position.z = itr->pose.pose.position.z + twist->twist.linear.z * duration * dist_(engine_);
+            Eigen::Vector3d trans_vec;
+            if(estimate_3d_pose)
+            {
+                trans_vec(2) = twist.twist.linear.z * duration * position_dist_(engine_);
+            }
+            else
+            {
+                trans_vec(2)  = 0;
+            }
+            trans_vec(0) = twist.twist.linear.x * duration * position_dist_(engine_);
+            trans_vec(1) = twist.twist.linear.y * duration * position_dist_(engine_);
+            Eigen::Matrix3d rotation_mat = quaternion_operation::getRotationMatrix(itr->pose.pose.orientation);
+            trans_vec = rotation_mat*trans_vec;
+            itr->pose.pose.position.x = itr->pose.pose.position.x + trans_vec(0);
+            itr->pose.pose.position.y = itr->pose.pose.position.y + trans_vec(1);
+            if(estimate_3d_pose)
+            {
+                itr->pose.pose.position.z = itr->pose.pose.position.z + trans_vec(2);
+            }
             // Evaluate
-            double dist = std::sqrt(std::pow(itr->pose.pose.position.x-point->point.x,2)) 
-                + std::sqrt(std::pow(itr->pose.pose.position.y-point->point.y,2))
-                + std::sqrt(std::pow(itr->pose.pose.position.z-point->point.z,2));
+            double dist = std::sqrt(std::pow(itr->pose.pose.position.x-pose.pose.position.x,2)
+                + std::pow(itr->pose.pose.position.y-pose.pose.position.y,2)
+                + std::pow(itr->pose.pose.position.z-pose.pose.position.z,2));
+            geometry_msgs::Quaternion diff_quat = quaternion_operation::getRotation(itr->pose.pose.orientation,pose.pose.orientation);
+            geometry_msgs::Vector3 diff_vec = quaternion_operation::convertQuaternionToEulerAngle(diff_quat);
+            double diff_angle = std::sqrt(diff_vec.x*diff_vec.x + diff_vec.y*diff_vec.y + diff_vec.z*diff_vec.z);
+            // avoid zero diveide
             if(dist < 0.0001)
             {
                 dist = 0.0001;
             }
-            itr->weight = 1/dist;
+            if(diff_angle < 0.0001)
+            {
+                diff_angle = 0.0001;
+            }
+            itr->weight = 1/(dist*diff_angle);
         }
-        double total_weight = 1.0;
+        double total_weight = 0.0;
         double heighest_weight = 0;
-        geometry_msgs::PoseStamped ret;
+        geometry_msgs::PoseStamped ret = particles_[0].pose;
         for(auto itr = particles_.begin(); itr != particles_.end(); itr++)
         {
             total_weight = total_weight + itr->weight;
-            if(heighest_weight > itr->weight)
+            if(heighest_weight < itr->weight)
             {
                 heighest_weight = itr->weight;
                 ret = itr->pose;
@@ -109,78 +157,9 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimatePose(ros::Ti
             new_particles[i] = particles_[selected_index[i]];
         }
         particles_ = new_particles;
+        ret.header.stamp = stamp;
+        current_pose_ = ret;
         return ret;
     }
     return boost::none;
-}
-
-boost::optional<geometry_msgs::TwistStamped> ParticleFilter::estimateTwist(ros::Time stamp)
-{
-    std::map<std::string,std::pair<double,geometry_msgs::TwistStamped> > data;
-    double total_weight = 0;
-    for(auto itr = twist_weights_.begin(); itr != twist_weights_.end(); itr++)
-    {
-        geometry_msgs::TwistStamped twist;
-        if(buf_.queryData(stamp,itr->first,twist))
-        {
-            std::pair<double,geometry_msgs::TwistStamped> pair;
-            total_weight = total_weight + itr->second;
-            pair.first = itr->second;
-            pair.second = twist;
-            data[itr->first] = pair;
-        }
-    }
-    if(data.size() == 0)
-    {
-        return boost::none;
-    }
-    for(auto itr = data.begin(); itr != data.end(); itr++)
-    {
-        itr->second.first = itr->second.first/total_weight;
-    }
-    geometry_msgs::TwistStamped ret;
-    for(auto itr = data.begin(); itr != data.end(); itr++)
-    {
-        ret.twist.linear.x = ret.twist.linear.x + itr->second.second.twist.linear.x * itr->second.first;
-        ret.twist.linear.y = ret.twist.linear.y + itr->second.second.twist.linear.y * itr->second.first;
-        ret.twist.linear.z = ret.twist.linear.z + itr->second.second.twist.linear.z * itr->second.first;
-        ret.twist.angular.x = ret.twist.angular.x + itr->second.second.twist.angular.x * itr->second.first;
-        ret.twist.angular.y = ret.twist.angular.y + itr->second.second.twist.angular.y * itr->second.first;
-        ret.twist.angular.z = ret.twist.angular.z + itr->second.second.twist.angular.z * itr->second.first;
-    }
-    return ret;
-}
-
-boost::optional<geometry_msgs::PointStamped> ParticleFilter::estimatePoint(ros::Time stamp)
-{
-    std::map<std::string,std::pair<double,geometry_msgs::PointStamped> > data;
-    double total_weight = 0;
-    for(auto itr = point_weights_.begin(); itr != point_weights_.end(); itr++)
-    {
-        geometry_msgs::PointStamped point;
-        if(buf_.queryData(stamp,itr->first,point))
-        {
-            std::pair<double,geometry_msgs::PointStamped> pair;
-            total_weight = total_weight + itr->second;
-            pair.first = itr->second;
-            pair.second = point;
-            data[itr->first] = pair;
-        }
-    }
-    if(data.size() == 0)
-    {
-        return boost::none;
-    }
-    for(auto itr = data.begin(); itr != data.end(); itr++)
-    {
-        itr->second.first = itr->second.first/total_weight;
-    }
-    geometry_msgs::PointStamped ret;
-    for(auto itr = data.begin(); itr != data.end(); itr++)
-    {
-        ret.point.x = ret.point.x + itr->second.second.point.x * itr->second.first;
-        ret.point.y = ret.point.y + itr->second.second.point.y * itr->second.first;
-        ret.point.z = ret.point.z + itr->second.second.point.z * itr->second.first;
-    }
-    return ret;
 }
