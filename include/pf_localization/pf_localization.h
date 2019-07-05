@@ -33,6 +33,7 @@ public:
     void run();
 private:
     void updateCurrentPose();
+    boost::optional<geometry_msgs::TwistStamped> getCurrentTwist();
     void twistStampedCallback(const geometry_msgs::TwistStamped::ConstPtr msg);
     void poseStampedCallback(const geometry_msgs::PoseStamped::ConstPtr msg);
     std::mutex mtx_;

@@ -2,16 +2,17 @@
 
 #include <quaternion_operation/quaternion_operation.h>
 
-ParticleFilter::ParticleFilter(int num_particles,double buffer_length,bool estimate_3d_pose,
+ParticleFilter::ParticleFilter(int num_particles,double buffer_length,bool estimate_3d_pose,std::string robot_frame_id,
     double reset_ess_threashold,double max_expansion_orientation,double max_expantion_position) 
     : num_particles(num_particles),buffer_length(buffer_length),estimate_3d_pose(estimate_3d_pose),reset_ess_threashold(reset_ess_threashold),
      max_expansion_orientation(max_expansion_orientation),max_expantion_position(max_expantion_position),
-    engine_(seed_gen_()),position_dist_(1.0,1.0),rotation_dist_(1.0,1.0),mt_(seed_gen_()),uniform_dist_(0.0,1.0),
+    engine_(seed_gen_()),position_dist_(1.0,0.5),rotation_dist_(1.0,0.5),mt_(seed_gen_()),uniform_dist_(0.0,1.0),
     pose_buf_("/pose",buffer_length),twist_buf_("/twist",buffer_length)
 {
     particles_ = std::vector<Particle>(num_particles);
     current_pose_ = boost::none;
     initial_pose_ = boost::none;
+    twist_estimator_ = std::unique_ptr<TwistEstimator>(new TwistEstimator("base_link"));
 }
 
 ParticleFilter::~ParticleFilter()
@@ -146,6 +147,8 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimateCurrentPose(
                 quaternion_operation::convertEulerAngleToQuaternion(orientation);
             itr->pose.pose.orientation = quaternion_operation::rotation(itr->pose.pose.orientation,twist_angular_quat);
             Eigen::Vector3d trans_vec;
+            trans_vec(0) = twist.twist.linear.x * duration * position_dist_(engine_);
+            trans_vec(1) = twist.twist.linear.y * duration * position_dist_(engine_);
             if(estimate_3d_pose)
             {
                 trans_vec(2) = twist.twist.linear.z * duration * position_dist_(engine_);
@@ -154,8 +157,6 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimateCurrentPose(
             {
                 trans_vec(2)  = 0;
             }
-            trans_vec(0) = twist.twist.linear.x * duration * position_dist_(engine_);
-            trans_vec(1) = twist.twist.linear.y * duration * position_dist_(engine_);
             Eigen::Matrix3d rotation_mat = quaternion_operation::getRotationMatrix(itr->pose.pose.orientation);
             trans_vec = rotation_mat*trans_vec;
             itr->pose.pose.position.x = itr->pose.pose.position.x + trans_vec(0);
@@ -220,8 +221,10 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimateCurrentPose(
         double ess = getEffectiveSampleSize();
         if(ess < reset_ess_threashold)
         {
+            twist_estimator_->clear();
             expansionReset();
         }
+        twist_estimator_->add(ret);
         return ret;
     }
     return boost::none;

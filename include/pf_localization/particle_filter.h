@@ -17,6 +17,9 @@
 #include <map>
 #include <random>
 
+// Headers in this package
+#include <pf_localization/twist_estimator.h>
+
 struct Particle
 {
     geometry_msgs::PoseStamped pose;
@@ -26,7 +29,7 @@ struct Particle
 class ParticleFilter
 {
 public:
-    ParticleFilter(int num_particles,double buffer_length,bool estimate_3d_pose,
+    ParticleFilter(int num_particles,double buffer_length,bool estimate_3d_pose,std::string robot_frame_id,
         double reset_ess_threashold,double max_expansion_orientation,double max_expantion_position);
     ~ParticleFilter();
     const int num_particles;
@@ -38,6 +41,10 @@ public:
     void updateTwist(geometry_msgs::TwistStamped twist);
     void updatePose(geometry_msgs::PoseStamped pose);
     boost::optional<geometry_msgs::PoseStamped> estimateCurrentPose(ros::Time stamp);
+    boost::optional<geometry_msgs::TwistStamped> getCurrentTwist()
+    {
+        return twist_estimator_->estimateTwist();
+    }
     void setInitialPose(geometry_msgs::PoseStamped pose);
     boost::optional<geometry_msgs::PoseStamped> getInitialPose();
     std::vector<Particle> getParticles(){return particles_;};
@@ -61,6 +68,7 @@ private:
     std::uniform_real_distribution<double> uniform_dist_;
     data_buffer::PoseStampedDataBuffer pose_buf_;
     data_buffer::TwistStampedDataBuffer twist_buf_;
+    std::unique_ptr<TwistEstimator> twist_estimator_;
 };
 
 #endif  //PF_LOCALIZATION_PARTICLE_FILTER_H_INCLUDED
