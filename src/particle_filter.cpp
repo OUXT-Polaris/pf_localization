@@ -2,14 +2,19 @@
 
 #include <quaternion_operation/quaternion_operation.h>
 
-ParticleFilter::ParticleFilter(int num_particles,double buffer_length,bool estimate_3d_pose) 
-    : num_particles(num_particles),buffer_length(buffer_length),estimate_3d_pose(estimate_3d_pose),
-    engine_(seed_gen_()),position_dist_(1.0,10.0),rotation_dist_(1.0,1.0),mt_(seed_gen_()),uniform_dist_(0.0,1.0),
+ParticleFilter::ParticleFilter(int num_particles,double buffer_length,bool estimate_3d_pose,std::string robot_frame_id,
+    double expansion_reset_ess_threashold,double max_expansion_orientation,double max_expantion_position,
+    double sensor_reset_ess_threashold,double max_sensor_reset_orientation,double max_sensor_reset_position) 
+    : num_particles(num_particles),buffer_length(buffer_length),estimate_3d_pose(estimate_3d_pose),expansion_reset_ess_threashold(expansion_reset_ess_threashold),
+     max_expansion_orientation(max_expansion_orientation),max_expantion_position(max_expantion_position),
+     sensor_reset_ess_threashold(sensor_reset_ess_threashold),max_sensor_reset_orientation(max_sensor_reset_orientation),max_sensor_reset_position(max_sensor_reset_position),
+    engine_(seed_gen_()),position_dist_(1.0,2.0),rotation_dist_(1.0,10.0),mt_(seed_gen_()),uniform_dist_(0.0,1.0),
     pose_buf_("/pose",buffer_length),twist_buf_("/twist",buffer_length)
 {
     particles_ = std::vector<Particle>(num_particles);
     current_pose_ = boost::none;
     initial_pose_ = boost::none;
+    twist_estimator_ = std::unique_ptr<TwistEstimator>(new TwistEstimator("base_link"));
 }
 
 ParticleFilter::~ParticleFilter()
@@ -38,16 +43,86 @@ void ParticleFilter::setInitialPose(geometry_msgs::PoseStamped pose)
     initial_pose_ = pose;
     for(auto itr = particles_.begin(); itr != particles_.end(); itr++)
     {
-        itr->weight = (double)1.0/num_particles;
+        itr->weight = (double)1.0/(double)num_particles;
         itr->pose = pose;
     }
     return;
 }
 
-void ParticleFilter::reset(geometry_msgs::PoseStamped pose)
+void ParticleFilter::sensorReset(geometry_msgs::PoseStamped pose)
 {
-    std::normal_distribution<> initial_position_dist(0.0,0.1);
-    std::normal_distribution<> initial_rotation_dist(0.0,0.1);
+    ROS_INFO_STREAM("execute sensor reset");
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_real_distribution<double> rand(-1.0,1.0);
+    for(auto itr = particles_.begin(); itr != particles_.end(); itr++)
+    {
+        geometry_msgs::Vector3 rand_rpy;
+        geometry_msgs::Point rand_xyz;
+        if(estimate_3d_pose)
+        {
+            rand_rpy.x = rand(mt)*max_expansion_orientation;
+            rand_rpy.y = rand(mt)*max_expansion_orientation;
+            rand_rpy.z = rand(mt)*max_expansion_orientation;
+            rand_xyz.x = rand(mt)*max_expantion_position;
+            rand_xyz.y = rand(mt)*max_expantion_position;
+            rand_xyz.z = rand(mt)*max_expantion_position;
+        }
+        else
+        {
+            rand_rpy.x = 0;
+            rand_rpy.y = 0;
+            rand_rpy.z = rand(mt)*max_expansion_orientation;
+            rand_xyz.x = rand(mt)*max_expantion_position;
+            rand_xyz.y = rand(mt)*max_expantion_position;
+            rand_xyz.z = 0;
+        }
+        geometry_msgs::Quaternion rand_quat = quaternion_operation::convertEulerAngleToQuaternion(rand_rpy);
+        itr->pose.pose.orientation = pose.pose.orientation*rand_quat;
+        itr->pose.pose.position.x = pose.pose.position.x + rand_xyz.x;
+        itr->pose.pose.position.y = pose.pose.position.y + rand_xyz.y;
+        itr->pose.pose.position.z = pose.pose.position.z + rand_xyz.z;
+        itr->weight = (double)1.0/(double)num_particles;
+    }
+    return;
+}
+
+void ParticleFilter::expansionReset()
+{
+    ROS_INFO_STREAM("execute expansion reset");
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_real_distribution<double> rand(-1.0,1.0);
+    for(auto itr = particles_.begin(); itr != particles_.end(); itr++)
+    {
+        geometry_msgs::Vector3 rand_rpy;
+        geometry_msgs::Point rand_xyz;
+        if(estimate_3d_pose)
+        {
+            rand_rpy.x = rand(mt)*max_expansion_orientation;
+            rand_rpy.y = rand(mt)*max_expansion_orientation;
+            rand_rpy.z = rand(mt)*max_expansion_orientation;
+            rand_xyz.x = rand(mt)*max_expantion_position;
+            rand_xyz.y = rand(mt)*max_expantion_position;
+            rand_xyz.z = rand(mt)*max_expantion_position;
+        }
+        else
+        {
+            rand_rpy.x = 0;
+            rand_rpy.y = 0;
+            rand_rpy.z = rand(mt)*max_expansion_orientation;
+            rand_xyz.x = rand(mt)*max_expantion_position;
+            rand_xyz.y = rand(mt)*max_expantion_position;
+            rand_xyz.z = 0;
+        }
+        geometry_msgs::Quaternion rand_quat = quaternion_operation::convertEulerAngleToQuaternion(rand_rpy);
+        itr->pose.pose.orientation = itr->pose.pose.orientation*rand_quat;
+        itr->pose.pose.position.x = itr->pose.pose.position.x + rand_xyz.x;
+        itr->pose.pose.position.y = itr->pose.pose.position.y + rand_xyz.y;
+        itr->pose.pose.position.z = itr->pose.pose.position.z + rand_xyz.z;
+        itr->weight = (double)1.0/(double)num_particles;
+    }
+    return;
 }
 
 bool ParticleFilter::checkQuaternion(geometry_msgs::Quaternion quat)
@@ -59,6 +134,29 @@ bool ParticleFilter::checkQuaternion(geometry_msgs::Quaternion quat)
         return true;
     }
     return false;
+}
+
+void ParticleFilter::normalizeWeights()
+{
+    double sum_weights = 0.0;
+    for(auto itr = particles_.begin(); itr != particles_.end(); itr++)
+    {
+        sum_weights = sum_weights + itr->weight;
+    }
+    for(auto itr = particles_.begin(); itr != particles_.end(); itr++)
+    {
+        itr->weight = itr->weight/sum_weights;
+    }
+}
+
+double ParticleFilter::getEffectiveSampleSize()
+{
+    double squared_sum = 0.0;
+    for(auto itr = particles_.begin(); itr != particles_.end(); itr++)
+    {
+        squared_sum = squared_sum + (itr->weight*itr->weight);
+    }
+    return 1/squared_sum;
 }
 
 boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimateCurrentPose(ros::Time stamp)
@@ -89,6 +187,8 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimateCurrentPose(
                 quaternion_operation::convertEulerAngleToQuaternion(orientation);
             itr->pose.pose.orientation = quaternion_operation::rotation(itr->pose.pose.orientation,twist_angular_quat);
             Eigen::Vector3d trans_vec;
+            trans_vec(0) = twist.twist.linear.x * duration * position_dist_(engine_);
+            trans_vec(1) = twist.twist.linear.y * duration * position_dist_(engine_);
             if(estimate_3d_pose)
             {
                 trans_vec(2) = twist.twist.linear.z * duration * position_dist_(engine_);
@@ -97,8 +197,6 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimateCurrentPose(
             {
                 trans_vec(2)  = 0;
             }
-            trans_vec(0) = twist.twist.linear.x * duration * position_dist_(engine_);
-            trans_vec(1) = twist.twist.linear.y * duration * position_dist_(engine_);
             Eigen::Matrix3d rotation_mat = quaternion_operation::getRotationMatrix(itr->pose.pose.orientation);
             trans_vec = rotation_mat*trans_vec;
             itr->pose.pose.position.x = itr->pose.pose.position.x + trans_vec(0);
@@ -159,6 +257,20 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimateCurrentPose(
         particles_ = new_particles;
         ret.header.stamp = stamp;
         current_pose_ = ret;
+        normalizeWeights();
+        //Reset
+        double ess = getEffectiveSampleSize();
+        if(ess < sensor_reset_ess_threashold)
+        {
+            twist_estimator_->clear();
+            sensorReset(pose);
+        }
+        else if(ess < expansion_reset_ess_threashold)
+        {
+            twist_estimator_->clear();
+            expansionReset();
+        }
+        twist_estimator_->add(ret);
         return ret;
     }
     return boost::none;
