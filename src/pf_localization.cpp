@@ -11,11 +11,20 @@ PfLocalization::PfLocalization(ros::NodeHandle nh,ros::NodeHandle pnh) : nh_(nh)
     pnh_.param<std::string>("base_link_frame", base_link_frame_, "base_link");
     pnh_.param<bool>("estimate_3d_pose",estimate_3d_pose_,false);
     pnh_.param<bool>("publish_marker",publish_marker_,false);
-    pnh_.param<double>("reset_ess_threashold",reset_ess_threashold_,0.5);
+    pnh_.param<double>("expansion_reset_ess_threashold",expansion_reset_ess_threashold_,10);
     pnh_.param<double>("max_expantion_orientation",max_expantion_orientation_,0.5);
     pnh_.param<double>("max_expantion_position",max_expantion_position_,0.5);
+    pnh_.param<double>("sensor_reset_ess_threashold",sensor_reset_ess_threashold_,30);
+    pnh_.param<double>("max_sensor_reset_orientation",max_sensor_reset_orientation_,0.5);
+    pnh_.param<double>("max_sensor_reset_position",max_sensor_reset_position_,0.5);
+    ROS_ASSERT(num_particles_>0);
+    ROS_ASSERT(update_rate_>0);
+    ROS_ASSERT(expansion_reset_ess_threashold_>0);
+    ROS_ASSERT(sensor_reset_ess_threashold_>0);
+    ROS_ASSERT(sensor_reset_ess_threashold_<expansion_reset_ess_threashold_);
     pf_ptr_ = std::make_shared<ParticleFilter>(num_particles_,1,estimate_3d_pose_,base_link_frame_,
-        reset_ess_threashold_,max_expantion_orientation_,max_expantion_position_);
+        expansion_reset_ess_threashold_,max_expantion_orientation_,max_expantion_position_,
+        sensor_reset_ess_threashold_,max_sensor_reset_orientation_,max_sensor_reset_position_);
     current_pose_pub_ = pnh_.advertise<geometry_msgs::PoseStamped>("current_pose",1);
     current_twist_pub_ = pnh_.advertise<geometry_msgs::TwistStamped>("current_twist",1);
     if(publish_marker_)

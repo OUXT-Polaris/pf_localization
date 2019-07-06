@@ -9,9 +9,12 @@
     <arg name="num_particles" default="100"/>
     <arg name="publish_marker" default="true"/>
     <arg name="respawn" default="false"/>
-    <arg name="reset_ess_threashold" default="30"/>
-    <arg name="max_expantion_orientation" default="0.3"/>
-    <arg name="max_expantion_position" default="0.5"/>
+    <arg name="expansion_reset_ess_threashold" default="30"/>
+    <arg name="max_expantion_orientation" default="0.1"/>
+    <arg name="max_expantion_position" default="1.0"/>
+    <arg name="sensor_reset_ess_threashold" default="10"/>
+    <arg name="max_sensor_reset_orientation" default="0.5"/>
+    <arg name="max_sensor_reset_position" default="1.0"/>
 
     <node pkg="pf_localization" type="pf_localization_node" name="pf_localization_node" output="screen" respawn="$(arg respawn)" respawn_delay="0">
         <param name="base_link_frame" value="$(arg base_link_frame)"/>
@@ -22,8 +25,11 @@
         <param name="update_rate" value="$(arg update_rate)"/>
         <param name="num_particles" value="$(arg num_particles)"/>
         <param name="publish_marker" value="$(arg publish_marker)"/>
-        <param name="reset_ess_threashold" value="$(arg reset_ess_threashold)"/>
+        <param name="expansion_reset_ess_threashold" value="$(arg expansion_reset_ess_threashold)"/>
         <param name="max_expantion_orientation" value="$(arg max_expantion_orientation)"/>
         <param name="max_expantion_position" value="$(arg max_expantion_position)"/>
+        <param name="sensor_reset_ess_threashold" value="$(arg sensor_reset_ess_threashold)"/>
+        <param name="max_sensor_reset_orientation" value="$(arg max_sensor_reset_orientation)"/>
+        <param name="max_sensor_reset_position" value="$(arg max_sensor_reset_position)"/>
     </node>
 </launch>

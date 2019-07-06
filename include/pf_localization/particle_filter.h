@@ -30,14 +30,18 @@ class ParticleFilter
 {
 public:
     ParticleFilter(int num_particles,double buffer_length,bool estimate_3d_pose,std::string robot_frame_id,
-        double reset_ess_threashold,double max_expansion_orientation,double max_expantion_position);
+        double expansion_reset_ess_threashold,double max_expansion_orientation,double max_expantion_position,
+        double sensor_reset_ess_threashold,double max_sensor_reset_orientation,double max_sensor_reset_position);
     ~ParticleFilter();
     const int num_particles;
     const double buffer_length;
     const bool estimate_3d_pose;
-    const double reset_ess_threashold;
+    const double expansion_reset_ess_threashold;
     const double max_expansion_orientation;
     const double max_expantion_position;
+    const double sensor_reset_ess_threashold;
+    const double max_sensor_reset_orientation;
+    const double max_sensor_reset_position;
     void updateTwist(geometry_msgs::TwistStamped twist);
     void updatePose(geometry_msgs::PoseStamped pose);
     boost::optional<geometry_msgs::PoseStamped> estimateCurrentPose(ros::Time stamp);
@@ -52,6 +56,7 @@ private:
     double getEffectiveSampleSize();
     void normalizeWeights();
     void expansionReset();
+    void sensorReset(geometry_msgs::PoseStamped pose);
     bool checkQuaternion(geometry_msgs::Quaternion quat);
     std::map<std::string,double> twist_weights_;
     std::map<std::string,double> point_weights_;
