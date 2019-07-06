@@ -2,3 +2,11 @@
     local-name: quaternion_operation
     uri: https://github.com/OUXT-Polaris/quaternion_operation.git
     version:  master
+- git:
+    local-name: data_buffer
+    uri: https://github.com/OUXT-Polaris/data_buffer.git
+    version:  master
+- git:
+    local-name: geometry_msgs_data_buffer
+    uri: https://github.com/OUXT-Polaris/geometry_msgs_data_buffer.git
+    version:  master

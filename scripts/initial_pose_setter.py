@@ -12,18 +12,22 @@ class InitialPoseSetter:
         self.pitch = rospy.get_param('~initial_pose/pitch')
         self.yaw = rospy.get_param('~initial_pose/yaw')
         self.fix_topic = rospy.get_param('~fix_topic')
+        self.map_frame = rospy.get_param('~map_frame')
         self.published = False
         self.fix_sub = rospy.Subscriber(self.fix_topic,NavSatFix,self.fixCallback,queue_size=1)
-        self.initial_pose_pub = rospy.Publisher("/initial_pose",PoseWithCovarianceStamped,latch=True,queue_size=1)
+        self.initial_pose_pub = rospy.Publisher("/initialpose",PoseWithCovarianceStamped,latch=True,queue_size=1)
     def publishInitialPose(self,fix_data):
         if self.published == False:
             initial_pose = PoseWithCovarianceStamped()
             geopoint = geodesy.utm.fromLatLong(fix_data.latitude,fix_data.longitude)
-            initial_pose.pose.pose.position.x = geopoint.easting
-            initial_pose.pose.pose.position.y = geopoint.northing
+            initial_pose.pose.pose.position.x = geopoint.northing
+            initial_pose.pose.pose.position.y = geopoint.easting * -1
             initial_pose.pose.pose.position.z = fix_data.altitude
             initial_pose.pose.pose.orientation = self.eulerToQuaternion(self.roll,self.pitch,self.yaw)
+            initial_pose.header.frame_id = self.map_frame
+            initial_pose.header.stamp = fix_data.header.stamp
             self.initial_pose_pub.publish(initial_pose)
+            self.published = True
         else:
             pass
     def eulerToQuaternion(self,roll,pitch,yaw):
