@@ -6,6 +6,7 @@
 
 // Headers in ROS
 #include <ros/ros.h>
+#include <std_msgs/Float32.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <geometry_msgs/PointStamped.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -61,12 +62,14 @@ private:
     double sensor_reset_ess_threashold_;
     double max_sensor_reset_orientation_;
     double max_sensor_reset_position_;
+    double sensor_reset_radius_;
     void broadcastBaseLinkFrame(ros::Time stamp,geometry_msgs::PoseStamped pose);
     void broadcastInitialPoseFrame(ros::Time stamp);
     template <class C>
     boost::optional<C> transformToMapFrame(C input);
     ros::Publisher current_twist_pub_;
     ros::Publisher marker_pub_;
+    ros::Publisher ess_pub_;
     bool publish_marker_;
     geometry_msgs::PoseStamped initial_pose_;
 };

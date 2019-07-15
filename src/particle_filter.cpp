@@ -3,13 +3,14 @@
 #include <quaternion_operation/quaternion_operation.h>
 
 ParticleFilter::ParticleFilter(int num_particles,double buffer_length,bool estimate_3d_pose,std::string robot_frame_id,
-    double expansion_reset_ess_threashold,double max_expansion_orientation,double max_expantion_position,
-    double sensor_reset_ess_threashold,double max_sensor_reset_orientation,double max_sensor_reset_position) 
+        double expansion_reset_ess_threashold,double max_expansion_orientation,double max_expantion_position,
+        double sensor_reset_ess_threashold,double max_sensor_reset_orientation,double max_sensor_reset_position,double sensor_reset_radius) 
     : num_particles(num_particles),buffer_length(buffer_length),estimate_3d_pose(estimate_3d_pose),expansion_reset_ess_threashold(expansion_reset_ess_threashold),
      max_expansion_orientation(max_expansion_orientation),max_expantion_position(max_expantion_position),
-     sensor_reset_ess_threashold(sensor_reset_ess_threashold),max_sensor_reset_orientation(max_sensor_reset_orientation),max_sensor_reset_position(max_sensor_reset_position),
-    engine_(seed_gen_()),position_dist_(1.0,2.0),rotation_dist_(1.0,10.0),mt_(seed_gen_()),uniform_dist_(0.0,1.0),
-    pose_buf_("/pose",buffer_length),twist_buf_("/twist",buffer_length)
+     sensor_reset_ess_threashold(sensor_reset_ess_threashold),max_sensor_reset_orientation(max_sensor_reset_orientation),
+     max_sensor_reset_position(max_sensor_reset_position),sensor_reset_radius(sensor_reset_radius),
+     engine_(seed_gen_()),position_dist_(1.0,1.0),rotation_dist_(1.0,1.0),mt_(seed_gen_()),uniform_dist_(0.0,1.0),
+     pose_buf_("/pose",buffer_length),twist_buf_("/twist",buffer_length)
 {
     particles_ = std::vector<Particle>(num_particles);
     current_pose_ = boost::none;
@@ -258,6 +259,9 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimateCurrentPose(
         ret.header.stamp = stamp;
         current_pose_ = ret;
         normalizeWeights();
+        double dist = std::sqrt(std::pow(ret.pose.position.x-pose.pose.position.x,2)
+            + std::pow(ret.pose.position.y-pose.pose.position.y,2)
+            + std::pow(ret.pose.position.z-pose.pose.position.z,2));
         //Reset
         double ess = getEffectiveSampleSize();
         if(ess < sensor_reset_ess_threashold)
@@ -269,6 +273,11 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimateCurrentPose(
         {
             twist_estimator_->clear();
             expansionReset();
+        }
+        else if(dist>sensor_reset_radius)
+        {
+            twist_estimator_->clear();
+            sensorReset(pose);
         }
         twist_estimator_->add(ret);
         return ret;

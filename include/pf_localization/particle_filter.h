@@ -31,7 +31,7 @@ class ParticleFilter
 public:
     ParticleFilter(int num_particles,double buffer_length,bool estimate_3d_pose,std::string robot_frame_id,
         double expansion_reset_ess_threashold,double max_expansion_orientation,double max_expantion_position,
-        double sensor_reset_ess_threashold,double max_sensor_reset_orientation,double max_sensor_reset_position);
+        double sensor_reset_ess_threashold,double max_sensor_reset_orientation,double max_sensor_reset_position,double sensor_reset_radius);
     ~ParticleFilter();
     const int num_particles;
     const double buffer_length;
@@ -42,6 +42,7 @@ public:
     const double sensor_reset_ess_threashold;
     const double max_sensor_reset_orientation;
     const double max_sensor_reset_position;
+    const double sensor_reset_radius;
     void updateTwist(geometry_msgs::TwistStamped twist);
     void updatePose(geometry_msgs::PoseStamped pose);
     boost::optional<geometry_msgs::PoseStamped> estimateCurrentPose(ros::Time stamp);
@@ -52,8 +53,8 @@ public:
     void setInitialPose(geometry_msgs::PoseStamped pose);
     boost::optional<geometry_msgs::PoseStamped> getInitialPose();
     std::vector<Particle> getParticles(){return particles_;};
-private:
     double getEffectiveSampleSize();
+private:
     void normalizeWeights();
     void expansionReset();
     void sensorReset(geometry_msgs::PoseStamped pose);
