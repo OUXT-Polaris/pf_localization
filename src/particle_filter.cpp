@@ -9,7 +9,7 @@ ParticleFilter::ParticleFilter(int num_particles,double buffer_length,bool estim
      max_expansion_orientation(max_expansion_orientation),max_expantion_position(max_expantion_position),
      sensor_reset_ess_threashold(sensor_reset_ess_threashold),max_sensor_reset_orientation(max_sensor_reset_orientation),
      max_sensor_reset_position(max_sensor_reset_position),sensor_reset_radius(sensor_reset_radius),
-     engine_(seed_gen_()),position_dist_(1.0,2.0),rotation_dist_(1.0,10.0),mt_(seed_gen_()),uniform_dist_(0.0,1.0),
+     engine_(seed_gen_()),position_dist_(1.0,1.0),rotation_dist_(1.0,1.0),mt_(seed_gen_()),uniform_dist_(0.0,1.0),
      pose_buf_("/pose",buffer_length),twist_buf_("/twist",buffer_length)
 {
     particles_ = std::vector<Particle>(num_particles);
