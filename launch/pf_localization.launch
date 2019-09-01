@@ -16,6 +16,8 @@
     <arg name="max_sensor_reset_orientation" default="0.5"/>
     <arg name="max_sensor_reset_position" default="1.0"/>
     <arg name="sensor_reset_radius" default="5.0"/>
+    <arg name="weight_position" default="0.5"/>
+    <arg name="weight_orientation" default="0.5"/>
 
     <node pkg="pf_localization" type="pf_localization_node" name="pf_localization_node" output="screen" respawn="$(arg respawn)" respawn_delay="0">
         <param name="base_link_frame" value="$(arg base_link_frame)"/>
@@ -33,5 +35,7 @@
         <param name="max_sensor_reset_orientation" value="$(arg max_sensor_reset_orientation)"/>
         <param name="max_sensor_reset_position" value="$(arg max_sensor_reset_position)"/>
         <param name="sensor_reset_radius" value="$(arg sensor_reset_radius)"/>
+        <param name="weight_orientation" value="$(arg weight_orientation)"/>
+        <param name="weight_position" value="$(arg weight_position)"/>
     </node>
 </launch>

@@ -4,13 +4,14 @@
 
 ParticleFilter::ParticleFilter(int num_particles,double buffer_length,bool estimate_3d_pose,std::string robot_frame_id,
         double expansion_reset_ess_threashold,double max_expansion_orientation,double max_expantion_position,
-        double sensor_reset_ess_threashold,double max_sensor_reset_orientation,double max_sensor_reset_position,double sensor_reset_radius) 
+        double sensor_reset_ess_threashold,double max_sensor_reset_orientation,double max_sensor_reset_position,double sensor_reset_radius,
+        double weight_position,double weight_orientation) 
     : num_particles(num_particles),buffer_length(buffer_length),estimate_3d_pose(estimate_3d_pose),expansion_reset_ess_threashold(expansion_reset_ess_threashold),
      max_expansion_orientation(max_expansion_orientation),max_expantion_position(max_expantion_position),
      sensor_reset_ess_threashold(sensor_reset_ess_threashold),max_sensor_reset_orientation(max_sensor_reset_orientation),
      max_sensor_reset_position(max_sensor_reset_position),sensor_reset_radius(sensor_reset_radius),
-     engine_(seed_gen_()),position_dist_(1.0,1.0),rotation_dist_(1.0,1.0),mt_(seed_gen_()),uniform_dist_(0.0,1.0),
-     pose_buf_("/pose",buffer_length),twist_buf_("/twist",buffer_length)
+     engine_(seed_gen_()),position_dist_(1.0,0.1),rotation_dist_(1.0,0.1),mt_(seed_gen_()),uniform_dist_(0.0,1.0),
+     pose_buf_("/pose",buffer_length),twist_buf_("/twist",buffer_length),weight_position(weight_position),weight_orientation(weight_orientation)
 {
     particles_ = std::vector<Particle>(num_particles);
     current_pose_ = boost::none;
@@ -214,15 +215,16 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimateCurrentPose(
             geometry_msgs::Vector3 diff_vec = quaternion_operation::convertQuaternionToEulerAngle(diff_quat);
             double diff_angle = std::sqrt(diff_vec.x*diff_vec.x + diff_vec.y*diff_vec.y + diff_vec.z*diff_vec.z);
             // avoid zero diveide
-            if(dist < 0.0001)
+            if(dist < 0.01)
             {
-                dist = 0.0001;
+                dist = 0.01;
             }
-            if(diff_angle < 0.0001)
+            if(diff_angle < 0.01)
             {
-                diff_angle = 0.0001;
+                diff_angle = 0.01;
             }
-            itr->weight = 1/(dist*diff_angle);
+            //itr->weight = 1/(dist*diff_angle);
+            itr->weight = 1/(weight_position*dist+weight_orientation*diff_angle);
         }
         double total_weight = 0.0;
         double heighest_weight = 0;

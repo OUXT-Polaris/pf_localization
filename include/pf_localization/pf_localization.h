@@ -63,6 +63,8 @@ private:
     double max_sensor_reset_orientation_;
     double max_sensor_reset_position_;
     double sensor_reset_radius_;
+    double weight_position_;
+    double weight_orientation_;
     void broadcastBaseLinkFrame(ros::Time stamp,geometry_msgs::PoseStamped pose);
     void broadcastInitialPoseFrame(ros::Time stamp);
     template <class C>

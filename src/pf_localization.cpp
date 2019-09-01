@@ -18,6 +18,8 @@ PfLocalization::PfLocalization(ros::NodeHandle nh,ros::NodeHandle pnh) : nh_(nh)
     pnh_.param<double>("max_sensor_reset_orientation",max_sensor_reset_orientation_,0.5);
     pnh_.param<double>("max_sensor_reset_position",max_sensor_reset_position_,0.5);
     pnh_.param<double>("sensor_reset_radius",sensor_reset_radius_,5.0);
+    pnh_.param<double>("weight_position",weight_position_,0.9);
+    pnh_.param<double>("weight_orientation",weight_orientation_,0.1);
     ROS_ASSERT(num_particles_>0);
     ROS_ASSERT(update_rate_>0);
     ROS_ASSERT(expansion_reset_ess_threashold_>0);
@@ -26,7 +28,8 @@ PfLocalization::PfLocalization(ros::NodeHandle nh,ros::NodeHandle pnh) : nh_(nh)
     ROS_ASSERT(sensor_reset_radius_>0);
     pf_ptr_ = std::make_shared<ParticleFilter>(num_particles_,1,estimate_3d_pose_,base_link_frame_,
         expansion_reset_ess_threashold_,max_expantion_orientation_,max_expantion_position_,
-        sensor_reset_ess_threashold_,max_sensor_reset_orientation_,max_sensor_reset_position_,sensor_reset_radius_);
+        sensor_reset_ess_threashold_,max_sensor_reset_orientation_,max_sensor_reset_position_,sensor_reset_radius_,
+        weight_position_,weight_orientation_);
     current_pose_pub_ = pnh_.advertise<geometry_msgs::PoseStamped>("current_pose",1);
     current_twist_pub_ = pnh_.advertise<geometry_msgs::TwistStamped>("current_twist",1);
     ess_pub_ = pnh_.advertise<std_msgs::Float32>("effective_sample_size",1);
