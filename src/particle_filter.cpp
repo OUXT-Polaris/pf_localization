@@ -140,15 +140,21 @@ bool ParticleFilter::checkQuaternion(geometry_msgs::Quaternion quat)
 
 void ParticleFilter::normalizeWeights()
 {
-    double sum_weights = 0.0;
-    for(auto itr = particles_.begin(); itr != particles_.end(); itr++)
-    {
-        sum_weights = sum_weights + itr->weight;
-    }
+    double sum_weights = getTotalWeights();
     for(auto itr = particles_.begin(); itr != particles_.end(); itr++)
     {
         itr->weight = itr->weight/sum_weights;
     }
+}
+
+double ParticleFilter::getTotalWeights()
+{
+    double ret = 0.0;
+    for(auto itr = particles_.begin(); itr != particles_.end(); itr++)
+    {
+        ret = ret + itr->weight;
+    }
+    return ret;
 }
 
 double ParticleFilter::getEffectiveSampleSize()
@@ -159,6 +165,34 @@ double ParticleFilter::getEffectiveSampleSize()
         squared_sum = squared_sum + (itr->weight*itr->weight);
     }
     return 1/squared_sum;
+}
+
+void ParticleFilter::resampling()
+{
+    std::vector<Particle> new_particles(num_particles);
+    double total_weight = getTotalWeights();
+    double accum = uniform_dist_(mt_) / (double)num_particles;
+    double step = total_weight / (double)num_particles;
+    std::vector<int> choice(num_particles);
+	for(auto &c : choice)
+    {
+        int j = 0;
+        double current_total_weight = 0.0;
+		while(current_total_weight <= accum && j < (num_particles - 1))
+        {
+            current_total_weight = current_total_weight + particles_[j].weight;
+			j++;
+        }
+		c = j;   
+		accum = accum + step;
+	}
+	for(int i=0;i<num_particles;i++)
+    {
+		new_particles[i] = particles_[choice[i]];
+		new_particles[i].weight = 1.0/num_particles;
+	}
+    particles_ = new_particles;
+    return;
 }
 
 boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimateCurrentPose(ros::Time stamp)
@@ -239,28 +273,10 @@ boost::optional<geometry_msgs::PoseStamped> ParticleFilter::estimateCurrentPose(
             }
         }
         // Resampling
-        std::vector<int> selected_index = std::vector<int>(particles_.size());
-        double init_value = uniform_dist_(mt_) * total_weight;
-        int current_index = 0;
-        double current_total_weight = 0.0;
-        for(int i=0; i<particles_.size(); i++)
-        {
-            current_total_weight = current_total_weight + particles_[i].weight;
-            if((init_value + total_weight/(double)particles_.size()*current_index) < current_total_weight)
-            {
-                selected_index[current_index] = i;
-                current_index++;
-            }
-        }
-        std::vector<Particle> new_particles = std::vector<Particle>(particles_.size());
-        for(int i=0; i<particles_.size(); i++)
-        {
-            new_particles[i] = particles_[selected_index[i]];
-        }
-        particles_ = new_particles;
+        normalizeWeights();
+        resampling();
         ret.header.stamp = stamp;
         current_pose_ = ret;
-        normalizeWeights();
         double dist = std::sqrt(std::pow(ret.pose.position.x-pose.pose.position.x,2)
             + std::pow(ret.pose.position.y-pose.pose.position.y,2)
             + std::pow(ret.pose.position.z-pose.pose.position.z,2));

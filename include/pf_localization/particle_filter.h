@@ -58,10 +58,12 @@ public:
     std::vector<Particle> getParticles(){return particles_;};
     double getEffectiveSampleSize();
 private:
+    double getTotalWeights();
     void normalizeWeights();
     void expansionReset();
     void sensorReset(geometry_msgs::PoseStamped pose);
     bool checkQuaternion(geometry_msgs::Quaternion quat);
+    void resampling();
     std::map<std::string,double> twist_weights_;
     std::map<std::string,double> point_weights_;
     boost::optional<geometry_msgs::TwistStamped> estimateTwist(ros::Time stamp);
