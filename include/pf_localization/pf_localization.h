@@ -73,6 +73,7 @@ private:
     ros::Publisher marker_pub_;
     ros::Publisher ess_pub_;
     bool publish_marker_;
+    bool publish_frame_;
     geometry_msgs::PoseStamped initial_pose_;
 };
 

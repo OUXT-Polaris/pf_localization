@@ -7,6 +7,7 @@
     <arg name="estimate_3d_pose" default="false"/>
     <arg name="update_rate" default="30"/>
     <arg name="num_particles" default="100"/>
+    <arg name="publish_frame" default="false"/>
     <arg name="publish_marker" default="true"/>
     <arg name="respawn" default="false"/>
     <arg name="expansion_reset_ess_threashold" default="30"/>
@@ -28,6 +29,7 @@
         <param name="update_rate" value="$(arg update_rate)"/>
         <param name="num_particles" value="$(arg num_particles)"/>
         <param name="publish_marker" value="$(arg publish_marker)"/>
+        <param name="publish_frame" value="$(arg publish_frame)"/>
         <param name="expansion_reset_ess_threashold" value="$(arg expansion_reset_ess_threashold)"/>
         <param name="max_expantion_orientation" value="$(arg max_expantion_orientation)"/>
         <param name="max_expantion_position" value="$(arg max_expantion_position)"/>

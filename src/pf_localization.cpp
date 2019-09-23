@@ -9,6 +9,7 @@ PfLocalization::PfLocalization(ros::NodeHandle nh,ros::NodeHandle pnh) : nh_(nh)
     pnh_.param<std::string>("twist_topic", twist_topic_, "/twist");
     pnh_.param<std::string>("map_frame", map_frame_, "map");
     pnh_.param<std::string>("base_link_frame", base_link_frame_, "base_link");
+    pnh_.param<bool>("publish_frame",publish_frame_,false);
     pnh_.param<bool>("estimate_3d_pose",estimate_3d_pose_,false);
     pnh_.param<bool>("publish_marker",publish_marker_,false);
     pnh_.param<double>("expansion_reset_ess_threashold",expansion_reset_ess_threashold_,10);
@@ -67,8 +68,11 @@ void PfLocalization::updateCurrentPose()
         boost::optional<geometry_msgs::PoseStamped> current_pose = pf_ptr_->estimateCurrentPose(now);
         if(current_pose)
         {
-            broadcastInitialPoseFrame(now);
-            broadcastBaseLinkFrame(now,*current_pose);
+            if(publish_frame_)
+            {
+                broadcastInitialPoseFrame(now);
+                broadcastBaseLinkFrame(now,*current_pose);
+            }
             current_pose_pub_.publish(*current_pose);
             std_msgs::Float32 ess_msg;
             ess_msg.data = pf_ptr_->getEffectiveSampleSize();
