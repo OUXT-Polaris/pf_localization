@@ -7,15 +7,15 @@
 // Headers in GLOG
 #include <glog/logging.h>
 
-int main(int argc, char *argv[])
+int main(int argc, char * argv[])
 {
-    google::InitGoogleLogging(argv[0]);
-    google::InstallFailureSignalHandler();
-    ros::init(argc, argv, "pf_localization_node");
-    ros::NodeHandle nh;
-    ros::NodeHandle pnh("~");
-    PfLocalization localization(nh,pnh);
-    localization.run();
-    ros::spin();
-    return 0;
+  google::InitGoogleLogging(argv[0]);
+  google::InstallFailureSignalHandler();
+  ros::init(argc, argv, "pf_localization_node");
+  ros::NodeHandle nh;
+  ros::NodeHandle pnh("~");
+  PfLocalization localization(nh, pnh);
+  localization.run();
+  ros::spin();
+  return 0;
 }
