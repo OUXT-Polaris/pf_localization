@@ -2,6 +2,8 @@
 
 #include <quaternion_operation/quaternion_operation.h>
 
+namespace pf_localization
+{
 ParticleFilter::ParticleFilter(
   int num_particles, double buffer_length, bool estimate_3d_pose,
   double expansion_reset_ess_threashold, double max_expansion_orientation,
@@ -281,4 +283,5 @@ boost::optional<geometry_msgs::msg::PoseStamped> ParticleFilter::estimateCurrent
     return ret;
   }
   return boost::none;
+}
 }

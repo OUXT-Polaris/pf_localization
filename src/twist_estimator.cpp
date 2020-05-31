@@ -1,5 +1,7 @@
 #include <pf_localization/twist_estimator.h>
 
+namespace pf_localization
+{
 TwistEstimator::TwistEstimator(std::string robot_frame_id)
 : robot_frame_id(robot_frame_id)
 {
@@ -50,4 +52,5 @@ boost::optional<geometry_msgs::msg::TwistStamped> TwistEstimator::estimateTwist(
   twist.twist.linear.y = trans_vec[1] / dt;
   twist.twist.linear.z = trans_vec[2] / dt;
   return twist;
+}
 }

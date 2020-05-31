@@ -11,6 +11,8 @@
 #include <boost/circular_buffer.hpp>
 #include <boost/optional.hpp>
 
+namespace pf_localization
+{
 class TwistEstimator
 {
 public:
@@ -24,5 +26,6 @@ public:
 private:
   boost::circular_buffer<geometry_msgs::msg::PoseStamped> pose_buffer_;
 };
+}
 
 #endif  //PF_LOCALIZATION_TWIST_ESTIMATOR_H_INCLUDED

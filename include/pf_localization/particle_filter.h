@@ -20,6 +20,8 @@
 // Headers in this package
 #include <pf_localization/twist_estimator.h>
 
+namespace pf_localization
+{
 struct Particle
 {
   geometry_msgs::msg::PoseStamped pose;
@@ -83,5 +85,6 @@ private:
   data_buffer::TwistStampedDataBuffer twist_buf_;
   std::unique_ptr<TwistEstimator> twist_estimator_;
 };
+}
 
 #endif  //PF_LOCALIZATION_PARTICLE_FILTER_H_INCLUDED
