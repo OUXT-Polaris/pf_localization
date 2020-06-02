@@ -28,10 +28,12 @@ find_package(visualization_msgs REQUIRED)
 find_package(geometry_msgs_data_buffer REQUIRED)
 find_package(data_buffer REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(Boost COMPONENTS system REQUIRED)
 
 include_directories(
   include
   ${EIGEN3_INCLUDE_DIR}
+  ${Boost_INCLUDE_DIR}
 )
 
 add_library(particle_filter SHARED
@@ -50,6 +52,7 @@ ament_target_dependencies(particle_filter
   visualization_msgs
   geometry_msgs_data_buffer
   data_buffer)
+target_link_libraries(particle_filter ${Boost_LIBRARIES})
 
 add_library(pf_localization_component SHARED
   src/pf_localization_component.cpp
@@ -69,12 +72,23 @@ ament_target_dependencies(pf_localization_component
 target_link_libraries(pf_localization_component particle_filter)
 rclcpp_components_register_nodes(pf_localization_component
   "pf_localization::PfLocalizationComponent")
-#add_executable(pf_localization_node 
-#  src/pf_localization_node.cpp 
-#  src/pf_localization.cpp 
-#  src/particle_filter.cpp
-#  src/twist_estimator.cpp)
-#target_link_libraries(pf_localization_node ${catkin_LIBRARIES} glog)
+
+add_executable(pf_localization_node
+  src/pf_localization_node.cpp
+)
+target_link_libraries(pf_localization_node pf_localization_component glog)
+ament_target_dependencies(pf_localization_node
+  rclcpp
+  rclcpp_components
+  geometry_msgs
+  tf2
+  tf2_ros
+  tf2_msgs
+  tf2_geometry_msgs
+  quaternion_operation
+  visualization_msgs
+  geometry_msgs_data_buffer
+  data_buffer)
 
 # install executables/libs
 #install(TARGETS pf_localization_node

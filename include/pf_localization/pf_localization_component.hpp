@@ -2,7 +2,7 @@
 #define PF_LOCALIZATION_PF_LOCALIZATION_H_INCLUDED
 
 // Headers in this package
-#include <pf_localization/particle_filter.h>
+#include <pf_localization/particle_filter.hpp>
 
 // Headers in ROS
 #include <rclcpp/rclcpp.hpp>
@@ -33,7 +33,6 @@ class PfLocalizationComponent : public rclcpp::Node
 public:
   PfLocalizationComponent(const rclcpp::NodeOptions & options);
   ~PfLocalizationComponent();
-  void run();
 
 private:
   void updateCurrentPose();

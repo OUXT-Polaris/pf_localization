@@ -1,4 +1,4 @@
-#include <pf_localization/pf_localization_component.h>
+#include <pf_localization/pf_localization_component.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
 namespace pf_localization
@@ -64,18 +64,14 @@ PfLocalizationComponent::PfLocalizationComponent(const rclcpp::NodeOptions & opt
   pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
     pose_topic_, 1,
     std::bind(&PfLocalizationComponent::poseStampedCallback, this, std::placeholders::_1));
+  using namespace std::chrono_literals;
+  update_pose_timer_ =
+    this->create_wall_timer(30ms, std::bind(&PfLocalizationComponent::updateCurrentPose, this));
 }
 
 PfLocalizationComponent::~PfLocalizationComponent()
 {
 
-}
-
-void PfLocalizationComponent::run()
-{
-  using namespace std::chrono_literals;
-  update_pose_timer_ =
-    this->create_wall_timer(30ms, std::bind(&PfLocalizationComponent::updateCurrentPose, this));
 }
 
 boost::optional<geometry_msgs::msg::TwistStamped> PfLocalizationComponent::getCurrentTwist()

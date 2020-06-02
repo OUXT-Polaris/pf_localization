@@ -1,4 +1,4 @@
-#include <pf_localization/particle_filter.h>
+#include <pf_localization/particle_filter.hpp>
 
 #include <quaternion_operation/quaternion_operation.h>
 
