@@ -5,17 +5,17 @@
 #include <pf_localization/particle_filter.h>
 
 // Headers in ROS
-#include <ros/ros.h>
-#include <std_msgs/Float32.h>
-#include <geometry_msgs/msg/TwistStamped.hpp>
-#include <geometry_msgs/msg/PointStamped.hpp>
-#include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <rclcpp/rclcpp.hpp>
+#include <std_msgs/msg/float32.hpp>
+#include <geometry_msgs/msg/twist_stamped.hpp>
+#include <geometry_msgs/msg/point_stamped.hpp>
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_ros/transform_listener.h>
 #include <tf2_ros/static_transform_broadcaster.h>
-#include <geometry_msgs/TransformStamped.h>
-#include <visualization_msgs/MarkerArray.h>
+#include <geometry_msgs/msg/transform_stamped.hpp>
+#include <visualization_msgs/msg/marker_array.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 // Headers in STL
@@ -26,31 +26,31 @@
 #include <boost/optional.hpp>
 #include <boost/thread.hpp>
 
-class PfLocalization
+namespace pf_localization
+{
+class PfLocalizationComponent : public rclcpp::Node
 {
 public:
-  PfLocalization(ros::NodeHandle nh, ros::NodeHandle pnh);
-  ~PfLocalization();
+  PfLocalizationComponent(const rclcpp::NodeOptions & options);
+  ~PfLocalizationComponent();
   void run();
 
 private:
   void updateCurrentPose();
-  boost::optional<geometry_msgs::TwistStamped> getCurrentTwist();
-  void twistStampedCallback(const geometry_msgs::TwistStamped::ConstPtr msg);
-  void poseStampedCallback(const geometry_msgs::PoseStamped::ConstPtr msg);
+  boost::optional<geometry_msgs::msg::TwistStamped> getCurrentTwist();
+  void twistStampedCallback(const geometry_msgs::msg::TwistStamped::SharedPtr msg);
+  void poseStampedCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
   std::mutex mtx_;
   std::shared_ptr<ParticleFilter> pf_ptr_;
   int num_particles_;
-  ros::NodeHandle nh_;
-  ros::NodeHandle pnh_;
   std::string pose_topic_;
   std::string twist_topic_;
   std::string map_frame_;
   std::string base_link_frame_;
   int update_rate_;
-  ros::Publisher current_pose_pub_;
-  ros::Subscriber twist_sub_;
-  ros::Subscriber pose_sub_;
+  rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr current_pose_pub_;
+  rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr twist_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_sub_;
   tf2_ros::TransformBroadcaster tf_broadcaster_;
   tf2_ros::StaticTransformBroadcaster static_tf_broadcaster_;
   tf2_ros::Buffer tf_buffer_;
@@ -66,16 +66,17 @@ private:
   double sensor_reset_radius_;
   double weight_position_;
   double weight_orientation_;
-  void broadcastBaseLinkFrame(rclcpp::Time stamp, geometry_msgs::PoseStamped pose);
+  void broadcastBaseLinkFrame(rclcpp::Time stamp, geometry_msgs::msg::PoseStamped pose);
   void broadcastInitialPoseFrame(rclcpp::Time stamp);
   template<class C>
   boost::optional<C> transformToMapFrame(C input);
-  ros::Publisher current_twist_pub_;
-  ros::Publisher marker_pub_;
-  ros::Publisher ess_pub_;
+  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr current_twist_pub_;
+  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub_;
+  rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr ess_pub_;
   bool publish_marker_;
   bool publish_frame_;
-  geometry_msgs::PoseStamped initial_pose_;
+  geometry_msgs::msg::PoseStamped initial_pose_;
+  rclcpp::TimerBase::SharedPtr update_pose_timer_;
 };
-
+}
 #endif  //PF_LOCALIZATION_PF_LOCALIZATION_H_INCLUDED

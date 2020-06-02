@@ -1,117 +1,139 @@
-#include <pf_localization/pf_localization.h>
+#include <pf_localization/pf_localization_component.h>
+#include <rclcpp_components/register_node_macro.hpp>
 
-PfLocalization::PfLocalization(ros::NodeHandle nh, ros::NodeHandle pnh)
-: nh_(nh), pnh_(pnh), tf_listener_(tf_buffer_)
+namespace pf_localization
+{
+PfLocalizationComponent::PfLocalizationComponent(const rclcpp::NodeOptions & options)
+: Node("pf_localization_node", options), tf_broadcaster_(this), static_tf_broadcaster_(this),
+  tf_buffer_(get_clock()), tf_listener_(tf_buffer_)
 {
   pose_recieved_ = false;
-  pnh_.param<int>("num_particles", num_particles_, 100);
-  pnh_.param<int>("update_rate", update_rate_, 20);
-  pnh_.param<std::string>("pose_topic", pose_topic_, "/gps/fix/position");
-  pnh_.param<std::string>("twist_topic", twist_topic_, "/twist");
-  pnh_.param<std::string>("map_frame", map_frame_, "map");
-  pnh_.param<std::string>("base_link_frame", base_link_frame_, "base_link");
-  pnh_.param<bool>("publish_frame", publish_frame_, false);
-  pnh_.param<bool>("estimate_3d_pose", estimate_3d_pose_, false);
-  pnh_.param<bool>("publish_marker", publish_marker_, false);
-  pnh_.param<double>("expansion_reset_ess_threashold", expansion_reset_ess_threashold_, 10);
-  pnh_.param<double>("max_expantion_orientation", max_expantion_orientation_, 0.5);
-  pnh_.param<double>("max_expantion_position", max_expantion_position_, 0.5);
-  pnh_.param<double>("sensor_reset_ess_threashold", sensor_reset_ess_threashold_, 30);
-  pnh_.param<double>("max_sensor_reset_orientation", max_sensor_reset_orientation_, 0.5);
-  pnh_.param<double>("max_sensor_reset_position", max_sensor_reset_position_, 0.5);
-  pnh_.param<double>("sensor_reset_radius", sensor_reset_radius_, 5.0);
-  pnh_.param<double>("weight_position", weight_position_, 0.9);
-  pnh_.param<double>("weight_orientation", weight_orientation_, 0.1);
-  ROS_ASSERT(num_particles_ > 0);
-  ROS_ASSERT(update_rate_ > 0);
-  ROS_ASSERT(expansion_reset_ess_threashold_ > 0);
-  ROS_ASSERT(sensor_reset_ess_threashold_ > 0);
-  ROS_ASSERT(sensor_reset_ess_threashold_ < expansion_reset_ess_threashold_);
-  ROS_ASSERT(sensor_reset_radius_ > 0);
-  pf_ptr_ = std::make_shared<ParticleFilter>(num_particles_, 1, estimate_3d_pose_, base_link_frame_,
+  declare_parameter("num_particles", 100);
+  get_parameter("num_particles", num_particles_);
+  declare_parameter("pose_topic", "/gps/fix/position");
+  get_parameter("pose_topic", pose_topic_);
+  declare_parameter("twist_topic", "/twist");
+  get_parameter("twist_topic", twist_topic_);
+  declare_parameter("map_frame", "map");
+  get_parameter("map_frame", map_frame_);
+  declare_parameter("base_link_frame", "base_link");
+  get_parameter("base_link_frame", base_link_frame_);
+  declare_parameter("publish_frame", false);
+  get_parameter("publish_frame", publish_frame_);
+  declare_parameter("estimate_3d_pose", false);
+  get_parameter("estimate_3d_pose", estimate_3d_pose_);
+  declare_parameter("publish_marker", false);
+  get_parameter("publish_marker", publish_marker_);
+  declare_parameter("expansion_reset_ess_threashold", 10);
+  get_parameter("expansion_reset_ess_threashold", expansion_reset_ess_threashold_);
+  declare_parameter("max_expantion_orientation", 0.5);
+  get_parameter("max_expantion_orientation", max_expantion_orientation_);
+  declare_parameter("max_expantion_position", 0.5);
+  get_parameter("max_expantion_position", max_expantion_position_);
+  declare_parameter("sensor_reset_ess_threashold", 30);
+  get_parameter("sensor_reset_ess_threashold", sensor_reset_ess_threashold_);
+  declare_parameter("max_sensor_reset_orientation", 0.5);
+  get_parameter("max_sensor_reset_orientation", max_sensor_reset_orientation_);
+  declare_parameter("max_sensor_reset_position", 0.5);
+  get_parameter("max_sensor_reset_position", max_sensor_reset_position_);
+  declare_parameter("sensor_reset_radius", 5.0);
+  get_parameter("sensor_reset_radius", sensor_reset_radius_);
+  declare_parameter("weight_position", 0.9);
+  get_parameter("weight_position", weight_position_);
+  declare_parameter("weight_orientation", 0.1);
+  get_parameter("weight_orientation", weight_orientation_);
+  assert(num_particles_ > 0);
+  assert(expansion_reset_ess_threashold_ > 0);
+  assert(sensor_reset_ess_threashold_ > 0);
+  assert(sensor_reset_ess_threashold_ < expansion_reset_ess_threashold_);
+  assert(sensor_reset_radius_ > 0);
+  pf_ptr_ = std::make_shared<ParticleFilter>(num_particles_, 1, estimate_3d_pose_,
       expansion_reset_ess_threashold_, max_expantion_orientation_, max_expantion_position_,
       sensor_reset_ess_threashold_, max_sensor_reset_orientation_, max_sensor_reset_position_,
       sensor_reset_radius_,
-      weight_position_, weight_orientation_);
-  current_pose_pub_ = pnh_.advertise<geometry_msgs::PoseStamped>("current_pose", 1);
-  current_twist_pub_ = pnh_.advertise<geometry_msgs::TwistStamped>("current_twist", 1);
-  ess_pub_ = pnh_.advertise<std_msgs::Float32>("effective_sample_size", 1);
+      weight_position_, weight_orientation_, get_clock());
+  current_pose_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("current_pose", 1);
+  current_twist_pub_ = this->create_publisher<geometry_msgs::msg::TwistStamped>("current_twist", 1);
+  ess_pub_ = this->create_publisher<std_msgs::msg::Float32>("~/effective_sample_size", 1);
   if (publish_marker_) {
-    marker_pub_ = pnh_.advertise<visualization_msgs::MarkerArray>("marker", 1);
+    marker_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("~/marker", 1);
   }
-  twist_sub_ = nh_.subscribe(twist_topic_, 1, &PfLocalization::twistStampedCallback, this);
-  pose_sub_ = nh_.subscribe(pose_topic_, 1, &PfLocalization::poseStampedCallback, this);
+  twist_sub_ = this->create_subscription<geometry_msgs::msg::TwistStamped>(
+    twist_topic_, 1,
+    std::bind(&PfLocalizationComponent::twistStampedCallback, this, std::placeholders::_1));
+  pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
+    pose_topic_, 1,
+    std::bind(&PfLocalizationComponent::poseStampedCallback, this, std::placeholders::_1));
 }
 
-PfLocalization::~PfLocalization()
+PfLocalizationComponent::~PfLocalizationComponent()
 {
 
 }
 
-void PfLocalization::run()
+void PfLocalizationComponent::run()
 {
-  boost::thread pose_update_thread(boost::bind(&PfLocalization::updateCurrentPose, this));
+  using namespace std::chrono_literals;
+  update_pose_timer_ =
+    this->create_wall_timer(30ms, std::bind(&PfLocalizationComponent::updateCurrentPose, this));
 }
 
-boost::optional<geometry_msgs::TwistStamped> PfLocalization::getCurrentTwist()
+boost::optional<geometry_msgs::msg::TwistStamped> PfLocalizationComponent::getCurrentTwist()
 {
   return pf_ptr_->getCurrentTwist();
 }
 
-void PfLocalization::updateCurrentPose()
+void PfLocalizationComponent::updateCurrentPose()
 {
-  ros::Rate rate(update_rate_);
-  while (ros::ok()) {
-    mtx_.lock();
-    rclcpp::Time now = get_clock()->now();
-    boost::optional<geometry_msgs::PoseStamped> current_pose = pf_ptr_->estimateCurrentPose(now);
-    if (current_pose) {
-      if (publish_frame_) {
-        broadcastInitialPoseFrame(now);
-        broadcastBaseLinkFrame(now, *current_pose);
-      }
-      current_pose_pub_.publish(*current_pose);
-      std_msgs::Float32 ess_msg;
-      ess_msg.data = pf_ptr_->getEffectiveSampleSize();
-      ess_pub_.publish(ess_msg);
+  mtx_.lock();
+  rclcpp::Time now = get_clock()->now();
+  boost::optional<geometry_msgs::msg::PoseStamped> current_pose = pf_ptr_->estimateCurrentPose(now);
+  if (current_pose) {
+    if (publish_frame_) {
+      broadcastInitialPoseFrame(now);
+      broadcastBaseLinkFrame(now, *current_pose);
     }
-    if (publish_marker_) {
-      visualization_msgs::MarkerArray marker;
-      std::vector<Particle> particles = pf_ptr_->getParticles();
-      int id = 0;
-      for (auto itr = particles.begin(); itr != particles.end(); itr++) {
-        visualization_msgs::Marker single_marker;
-        single_marker.header = itr->pose.header;
-        single_marker.pose = itr->pose.pose;
-        single_marker.type = single_marker.ARROW;
-        single_marker.id = id;
-        single_marker.color.r = 1.0 - itr->weight;
-        single_marker.color.g = 0.0;
-        single_marker.color.b = itr->weight;
-        single_marker.color.a = 1.0;
-        single_marker.action = single_marker.ADD;
-        single_marker.frame_locked = true;
-        single_marker.scale.x = 1.0;
-        single_marker.scale.y = 0.1;
-        single_marker.scale.z = 0.1;
-        single_marker.ns = "marker" + std::to_string(id);
-        marker.markers.push_back(single_marker);
-        id++;
-      }
-      marker_pub_.publish(marker);
+    current_pose_pub_->publish(*current_pose);
+    std_msgs::msg::Float32 ess_msg;
+    ess_msg.data = pf_ptr_->getEffectiveSampleSize();
+    ess_pub_->publish(ess_msg);
+  }
+  boost::optional<geometry_msgs::msg::TwistStamped> current_twist = getCurrentTwist();
+  if (current_twist) {
+    current_twist_pub_->publish(*current_twist);
+  }
+  if (publish_marker_) {
+    visualization_msgs::msg::MarkerArray marker;
+    std::vector<Particle> particles = pf_ptr_->getParticles();
+    int id = 0;
+    for (auto itr = particles.begin(); itr != particles.end(); itr++) {
+      visualization_msgs::msg::Marker single_marker;
+      single_marker.header = itr->pose.header;
+      single_marker.pose = itr->pose.pose;
+      single_marker.type = single_marker.ARROW;
+      single_marker.id = id;
+      single_marker.color.r = 1.0 - itr->weight;
+      single_marker.color.g = 0.0;
+      single_marker.color.b = itr->weight;
+      single_marker.color.a = 1.0;
+      single_marker.action = single_marker.ADD;
+      single_marker.frame_locked = true;
+      single_marker.scale.x = 1.0;
+      single_marker.scale.y = 0.1;
+      single_marker.scale.z = 0.1;
+      single_marker.ns = "marker" + std::to_string(id);
+      marker.markers.push_back(single_marker);
+      id++;
     }
-    boost::optional<geometry_msgs::TwistStamped> current_twist = getCurrentTwist();
-    if (current_twist) {
-      current_twist_pub_.publish(*current_twist);
-    }
-    mtx_.unlock();
-    rate.sleep();
+    marker_pub_->publish(marker);
   }
 }
 
-void PfLocalization::broadcastBaseLinkFrame(rclcpp::Time stamp, geometry_msgs::PoseStamped pose)
+void PfLocalizationComponent::broadcastBaseLinkFrame(
+  rclcpp::Time stamp,
+  geometry_msgs::msg::PoseStamped pose)
 {
-  geometry_msgs::TransformStamped transform_stamped;
+  geometry_msgs::msg::TransformStamped transform_stamped;
   transform_stamped.header.frame_id = map_frame_;
   transform_stamped.header.stamp = stamp;
   transform_stamped.child_frame_id = base_link_frame_;
@@ -122,11 +144,11 @@ void PfLocalization::broadcastBaseLinkFrame(rclcpp::Time stamp, geometry_msgs::P
   tf_broadcaster_.sendTransform(transform_stamped);
 }
 
-void PfLocalization::broadcastInitialPoseFrame(rclcpp::Time stamp)
+void PfLocalizationComponent::broadcastInitialPoseFrame(rclcpp::Time stamp)
 {
-  geometry_msgs::TransformStamped transform_stamped;
+  geometry_msgs::msg::TransformStamped transform_stamped;
   transform_stamped.header.frame_id = map_frame_;
-  //transform_stamped.header.stamp = stamp;
+  transform_stamped.header.stamp = stamp;
   transform_stamped.child_frame_id = "initial_pose";
   transform_stamped.transform.translation.x = initial_pose_.pose.position.x;
   transform_stamped.transform.translation.y = initial_pose_.pose.position.y;
@@ -138,14 +160,16 @@ void PfLocalization::broadcastInitialPoseFrame(rclcpp::Time stamp)
   static_tf_broadcaster_.sendTransform(transform_stamped);
 }
 
-void PfLocalization::twistStampedCallback(const geometry_msgs::TwistStamped::ConstPtr msg)
+void PfLocalizationComponent::twistStampedCallback(
+  const geometry_msgs::msg::TwistStamped::SharedPtr msg)
 {
   mtx_.lock();
   pf_ptr_->updateTwist(*msg);
   mtx_.unlock();
 }
 
-void PfLocalization::poseStampedCallback(const geometry_msgs::PoseStamped::ConstPtr msg)
+void PfLocalizationComponent::poseStampedCallback(
+  const geometry_msgs::msg::PoseStamped::SharedPtr msg)
 {
   mtx_.lock();
   if (!pose_recieved_) {
@@ -158,18 +182,21 @@ void PfLocalization::poseStampedCallback(const geometry_msgs::PoseStamped::Const
 }
 
 template<class C>
-boost::optional<C> PfLocalization::transformToMapFrame(C input)
+boost::optional<C> PfLocalizationComponent::transformToMapFrame(C input)
 {
   if (input.header.frame_id != map_frame_) {
-    geometry_msgs::TransformStamped transform_stamped;
+    geometry_msgs::msg::TransformStamped transform_stamped;
     try {
       transform_stamped = tf_buffer_.lookupTransform(map_frame_, input.header.frame_id,
-          input.header.stamp, ros::Duration(0.3));
+          input.header.stamp, rclcpp::Duration(0.3));
     } catch (tf2::TransformException & ex) {
-      ROS_ERROR("%s", ex.what());
+      RCLCPP_ERROR(get_logger(), ex.what());
       return boost::none;
     }
     tf2::doTransform(input, input, transform_stamped);
   }
   return input;
 }
+}
+
+RCLCPP_COMPONENTS_REGISTER_NODE(pf_localization::PfLocalizationComponent)

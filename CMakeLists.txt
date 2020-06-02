@@ -51,6 +51,24 @@ ament_target_dependencies(particle_filter
   geometry_msgs_data_buffer
   data_buffer)
 
+add_library(pf_localization_component SHARED
+  src/pf_localization_component.cpp
+)
+ament_target_dependencies(pf_localization_component
+  rclcpp
+  rclcpp_components
+  geometry_msgs
+  tf2
+  tf2_ros
+  tf2_msgs
+  tf2_geometry_msgs
+  quaternion_operation
+  visualization_msgs
+  geometry_msgs_data_buffer
+  data_buffer)
+target_link_libraries(pf_localization_component particle_filter)
+rclcpp_components_register_nodes(pf_localization_component
+  "pf_localization::PfLocalizationComponent")
 #add_executable(pf_localization_node 
 #  src/pf_localization_node.cpp 
 #  src/pf_localization.cpp 
@@ -65,16 +83,11 @@ ament_target_dependencies(particle_filter
 #  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 #)
 
-# install headers
-#install(DIRECTORY include
-#  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-#)
+install(DIRECTORY launch config
+  DESTINATION share/${PROJECT_NAME}
+)
 
-#install(DIRECTORY launch config
-#        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-#        USE_SOURCE_PERMISSIONS)
-
-install(TARGETS particle_filter
+install(TARGETS particle_filter pf_localization_component
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION bin)
