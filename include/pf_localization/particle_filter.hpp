@@ -1,7 +1,24 @@
-#ifndef PF_LOCALIZATION_PARTICLE_FILTER_H_INCLUDED
-#define PF_LOCALIZATION_PARTICLE_FILTER_H_INCLUDED
+// Copyright (c) 2019 OUXT Polaris
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-//headers in ROS
+#ifndef PF_LOCALIZATION__PARTICLE_FILTER_HPP_
+#define PF_LOCALIZATION__PARTICLE_FILTER_HPP_
+
+// headers in this package
+#include <pf_localization/twist_estimator.hpp>
+
+// headers in ROS
 #include <geometry_msgs/msg/twist_stamped.hpp>
 #include <geometry_msgs/msg/point_stamped.hpp>
 #include <geometry_msgs/msg/pose_stamped.h>
@@ -9,16 +26,16 @@
 #include <geometry_msgs_data_buffer/twist_stamped_data_buffer.h>
 #include <quaternion_operation/quaternion_operation.h>
 
-//headers in Boost
+// headers in Boost
 #include <boost/optional.hpp>
 
-//headers in STL
+// headers in STL
 #include <float.h>
 #include <map>
 #include <random>
-
-// Headers in this package
-#include <pf_localization/twist_estimator.hpp>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace pf_localization
 {
@@ -85,6 +102,6 @@ private:
   data_buffer::TwistStampedDataBuffer twist_buf_;
   std::unique_ptr<TwistEstimator> twist_estimator_;
 };
-}
+}  // namespace pf_localization
 
-#endif  //PF_LOCALIZATION_PARTICLE_FILTER_H_INCLUDED
+#endif  // PF_LOCALIZATION__PARTICLE_FILTER_HPP_

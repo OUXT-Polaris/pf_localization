@@ -1,5 +1,23 @@
+// Copyright (c) 2019 OUXT Polaris
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include <pf_localization/pf_localization_component.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
+
+// headers in STL
+#include <memory>
+#include <vector>
 
 namespace pf_localization
 {
@@ -71,7 +89,6 @@ PfLocalizationComponent::PfLocalizationComponent(const rclcpp::NodeOptions & opt
 
 PfLocalizationComponent::~PfLocalizationComponent()
 {
-
 }
 
 boost::optional<geometry_msgs::msg::TwistStamped> PfLocalizationComponent::getCurrentTwist()
@@ -193,6 +210,6 @@ boost::optional<C> PfLocalizationComponent::transformToMapFrame(C input)
   }
   return input;
 }
-}
+}  // namespace pf_localization
 
 RCLCPP_COMPONENTS_REGISTER_NODE(pf_localization::PfLocalizationComponent)

@@ -1,6 +1,24 @@
+// Copyright (c) 2019 OUXT Polaris
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include <pf_localization/particle_filter.hpp>
 
 #include <quaternion_operation/quaternion_operation.h>
+
+// headers in STL
+#include <memory>
+#include <vector>
 
 namespace pf_localization
 {
@@ -30,7 +48,6 @@ ParticleFilter::ParticleFilter(
 
 ParticleFilter::~ParticleFilter()
 {
-
 }
 
 boost::optional<geometry_msgs::msg::PoseStamped> ParticleFilter::getInitialPose()
@@ -53,14 +70,13 @@ void ParticleFilter::setInitialPose(geometry_msgs::msg::PoseStamped pose)
   current_pose_ = pose;
   initial_pose_ = pose;
   for (auto itr = particles_.begin(); itr != particles_.end(); itr++) {
-    itr->weight = (double)1.0 / (double)num_particles;
+    itr->weight = static_cast<double>(1.0) / static_cast<double>(num_particles);
     itr->pose = pose;
   }
 }
 
 void ParticleFilter::sensorReset(geometry_msgs::msg::PoseStamped pose)
 {
-  //ROS_INFO_STREAM("execute sensor reset");
   std::random_device rd;
   std::mt19937 mt(rd());
   std::uniform_real_distribution<double> rand(-1.0, 1.0);
@@ -88,13 +104,12 @@ void ParticleFilter::sensorReset(geometry_msgs::msg::PoseStamped pose)
     itr->pose.pose.position.x = pose.pose.position.x + rand_xyz.x;
     itr->pose.pose.position.y = pose.pose.position.y + rand_xyz.y;
     itr->pose.pose.position.z = pose.pose.position.z + rand_xyz.z;
-    itr->weight = (double)1.0 / (double)num_particles;
+    itr->weight = static_cast<double>(1.0) / static_cast<double>(num_particles);
   }
 }
 
 void ParticleFilter::expansionReset()
 {
-  //ROS_INFO_STREAM("execute expansion reset");
   std::random_device rd;
   std::mt19937 mt(rd());
   std::uniform_real_distribution<double> rand(-1.0, 1.0);
@@ -122,7 +137,7 @@ void ParticleFilter::expansionReset()
     itr->pose.pose.position.x = itr->pose.pose.position.x + rand_xyz.x;
     itr->pose.pose.position.y = itr->pose.pose.position.y + rand_xyz.y;
     itr->pose.pose.position.z = itr->pose.pose.position.z + rand_xyz.z;
-    itr->weight = (double)1.0 / (double)num_particles;
+    itr->weight = static_cast<double>(1.0) / static_cast<double>(num_particles);
   }
 }
 
@@ -168,8 +183,8 @@ void ParticleFilter::resampling()
 {
   std::vector<Particle> new_particles(num_particles);
   double total_weight = getTotalWeights();
-  double accum = uniform_dist_(mt_) / (double)num_particles;
-  double step = total_weight / (double)num_particles;
+  double accum = uniform_dist_(mt_) / static_cast<double>(num_particles);
+  double step = total_weight / static_cast<double>(num_particles);
   std::vector<int> choice(num_particles);
   for (auto & c : choice) {
     int j = 0;
@@ -246,7 +261,6 @@ boost::optional<geometry_msgs::msg::PoseStamped> ParticleFilter::estimateCurrent
       if (diff_angle < 0.01) {
         diff_angle = 0.01;
       }
-      //itr->weight = 1/(dist*diff_angle);
       itr->weight = 1 / (weight_position * dist + weight_orientation * diff_angle);
     }
     double total_weight = 0.0;
@@ -267,7 +281,7 @@ boost::optional<geometry_msgs::msg::PoseStamped> ParticleFilter::estimateCurrent
     double dist = std::sqrt(std::pow(ret.pose.position.x - pose.pose.position.x, 2) +
         std::pow(ret.pose.position.y - pose.pose.position.y, 2) +
         std::pow(ret.pose.position.z - pose.pose.position.z, 2));
-    //Reset
+    // Reset
     double ess = getEffectiveSampleSize();
     if (ess < sensor_reset_ess_threashold) {
       twist_estimator_->clear();
@@ -284,4 +298,4 @@ boost::optional<geometry_msgs::msg::PoseStamped> ParticleFilter::estimateCurrent
   }
   return boost::none;
 }
-}
+}  // namespace pf_localization
