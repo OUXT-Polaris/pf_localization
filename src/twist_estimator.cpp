@@ -52,8 +52,9 @@ boost::optional<geometry_msgs::msg::TwistStamped> TwistEstimator::estimateTwist(
   twist.header.frame_id = robot_frame_id;
   twist.header.stamp = pose_buffer_[1].header.stamp;
   geometry_msgs::msg::Quaternion rot =
-    quaternion_operation::getRotation(pose_buffer_[0].pose.orientation,
-      pose_buffer_[1].pose.orientation);
+    quaternion_operation::getRotation(
+    pose_buffer_[0].pose.orientation,
+    pose_buffer_[1].pose.orientation);
   twist.twist.angular = quaternion_operation::convertQuaternionToEulerAngle(rot);
   twist.twist.angular.x = twist.twist.angular.x / dt;
   twist.twist.angular.y = twist.twist.angular.y / dt;
