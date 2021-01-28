@@ -144,7 +144,9 @@ void ParticleFilter::expansionReset()
 bool ParticleFilter::checkQuaternion(geometry_msgs::msg::Quaternion quat)
 {
   double a =
-    std::sqrt(std::pow(quat.x,
+    std::sqrt(
+    std::pow(
+      quat.x,
       2) + std::pow(quat.y, 2) + std::pow(quat.z, 2) + std::pow(quat.w, 2));
   double b = 1.0;
   if (fabs(a - b) < DBL_EPSILON) {
@@ -226,8 +228,9 @@ boost::optional<geometry_msgs::msg::PoseStamped> ParticleFilter::estimateCurrent
       orientation.z = twist.twist.angular.z * duration * rotation_dist_(engine_);
       geometry_msgs::msg::Quaternion twist_angular_quat =
         quaternion_operation::convertEulerAngleToQuaternion(orientation);
-      itr->pose.pose.orientation = quaternion_operation::rotation(itr->pose.pose.orientation,
-          twist_angular_quat);
+      itr->pose.pose.orientation = quaternion_operation::rotation(
+        itr->pose.pose.orientation,
+        twist_angular_quat);
       Eigen::Vector3d trans_vec;
       trans_vec(0) = twist.twist.linear.x * duration * position_dist_(engine_);
       trans_vec(1) = twist.twist.linear.y * duration * position_dist_(engine_);
@@ -245,9 +248,10 @@ boost::optional<geometry_msgs::msg::PoseStamped> ParticleFilter::estimateCurrent
         itr->pose.pose.position.z = itr->pose.pose.position.z + trans_vec(2);
       }
       // Evaluate
-      double dist = std::sqrt(std::pow(itr->pose.pose.position.x - pose.pose.position.x, 2) +
-          std::pow(itr->pose.pose.position.y - pose.pose.position.y, 2) +
-          std::pow(itr->pose.pose.position.z - pose.pose.position.z, 2));
+      double dist = std::sqrt(
+        std::pow(itr->pose.pose.position.x - pose.pose.position.x, 2) +
+        std::pow(itr->pose.pose.position.y - pose.pose.position.y, 2) +
+        std::pow(itr->pose.pose.position.z - pose.pose.position.z, 2));
       geometry_msgs::msg::Quaternion diff_quat = quaternion_operation::getRotation(
         itr->pose.pose.orientation, pose.pose.orientation);
       geometry_msgs::msg::Vector3 diff_vec = quaternion_operation::convertQuaternionToEulerAngle(
@@ -278,9 +282,10 @@ boost::optional<geometry_msgs::msg::PoseStamped> ParticleFilter::estimateCurrent
     resampling();
     ret.header.stamp = stamp;
     current_pose_ = ret;
-    double dist = std::sqrt(std::pow(ret.pose.position.x - pose.pose.position.x, 2) +
-        std::pow(ret.pose.position.y - pose.pose.position.y, 2) +
-        std::pow(ret.pose.position.z - pose.pose.position.z, 2));
+    double dist = std::sqrt(
+      std::pow(ret.pose.position.x - pose.pose.position.x, 2) +
+      std::pow(ret.pose.position.y - pose.pose.position.y, 2) +
+      std::pow(ret.pose.position.z - pose.pose.position.z, 2));
     // Reset
     double ess = getEffectiveSampleSize();
     if (ess < sensor_reset_ess_threashold) {

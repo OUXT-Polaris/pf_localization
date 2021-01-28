@@ -65,11 +65,12 @@ PfLocalizationComponent::PfLocalizationComponent(const rclcpp::NodeOptions & opt
   assert(sensor_reset_ess_threashold_ > 0);
   assert(sensor_reset_ess_threashold_ < expansion_reset_ess_threashold_);
   assert(sensor_reset_radius_ > 0);
-  pf_ptr_ = std::make_shared<ParticleFilter>(num_particles_, 1, estimate_3d_pose_,
-      expansion_reset_ess_threashold_, max_expantion_orientation_, max_expantion_position_,
-      sensor_reset_ess_threashold_, max_sensor_reset_orientation_, max_sensor_reset_position_,
-      sensor_reset_radius_,
-      weight_position_, weight_orientation_, get_clock());
+  pf_ptr_ = std::make_shared<ParticleFilter>(
+    num_particles_, 1, estimate_3d_pose_,
+    expansion_reset_ess_threashold_, max_expantion_orientation_, max_expantion_position_,
+    sensor_reset_ess_threashold_, max_sensor_reset_orientation_, max_sensor_reset_position_,
+    sensor_reset_radius_,
+    weight_position_, weight_orientation_, get_clock());
   current_pose_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("current_pose", 1);
   current_twist_pub_ = this->create_publisher<geometry_msgs::msg::TwistStamped>("current_twist", 1);
   ess_pub_ = this->create_publisher<std_msgs::msg::Float32>("~/effective_sample_size", 1);
@@ -200,8 +201,9 @@ boost::optional<C> PfLocalizationComponent::transformToMapFrame(C input)
   if (input.header.frame_id != map_frame_) {
     geometry_msgs::msg::TransformStamped transform_stamped;
     try {
-      transform_stamped = tf_buffer_.lookupTransform(map_frame_, input.header.frame_id,
-          input.header.stamp, rclcpp::Duration(0.3));
+      transform_stamped = tf_buffer_.lookupTransform(
+        map_frame_, input.header.frame_id,
+        input.header.stamp, rclcpp::Duration(0.3));
     } catch (tf2::TransformException & ex) {
       RCLCPP_ERROR(get_logger(), ex.what());
       return boost::none;
