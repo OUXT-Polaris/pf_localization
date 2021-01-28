@@ -22,8 +22,8 @@
 #include <geometry_msgs/msg/twist_stamped.hpp>
 #include <geometry_msgs/msg/point_stamped.hpp>
 #include <geometry_msgs/msg/pose_stamped.h>
-#include <geometry_msgs_data_buffer/pose_stamped_data_buffer.h>
-#include <geometry_msgs_data_buffer/twist_stamped_data_buffer.h>
+#include <geometry_msgs_data_buffer/pose_stamped_data_buffer.hpp>
+#include <geometry_msgs_data_buffer/twist_stamped_data_buffer.hpp>
 #include <quaternion_operation/quaternion_operation.h>
 
 // headers in Boost
